@@ -9,6 +9,7 @@ import Login from './containers/Login.jsx';
 import Signup from './containers/Signup.jsx';
 import AuthenticateContainer from './containers/AuthenticateContainer.jsx';
 import Projects from './components/projects/Projects.jsx';
+import Project from './components/editor/Project.jsx';
 import reducers from './reducers/index.jsx';
 import loginRedirect from './middleware/loginRedirect.jsx';
 
@@ -41,38 +42,9 @@ render((
         <Route path="/login" component={Login} />
         <Route  component={AuthenticateContainer} >
           <Route path="/" component={Projects}/>
+          <Route path="/:project" component={Project} />
         </Route>
       </Router>
     </Provider>
   </MuiThemeProvider>
 ), document.getElementById('app'))
-
-
-
-
-/*import brace from 'brace';
-import AceEditor from 'react-ace';
-
-import 'brace/mode/javascript';
-import 'brace/theme/solarized_light';
-import 'brace/ext/language_tools';
-
-// Render editor
-ReactDOM.render(
-  <AceEditor
-    mode="javascript"
-    theme="solarized_light"
-    height="105vh"
-    width="105vw"
-    onChange={onChange}
-    name="UNIQUE_ID_OF_DIV"
-    editorProps={{$blockScrolling: true}}
-    setOptions={{
-        enableBasicAutocompletion: true,
-        enableLiveAutocompletion: true,
-        tabSize: 2,
-        fontSize: 16,
-    }}
-  />,
-  document.getElementById('app')
-);*/

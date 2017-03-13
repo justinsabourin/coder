@@ -26,8 +26,7 @@ app.use(session({
     store: new redisStore({
       host: 'localhost',
       port: 6379,
-      client: redisCli,
-      ttl: 260,
+      client: redisCli
     }),
     saveUninitialized: true,
 }));
@@ -73,6 +72,7 @@ app.get('/api/auth/self', function (req, res, next)  {
       console.log(req.user);
       return res.json(req.user);
     }
+    console.log('error');
     next({status: 401, message: "Not authenticated"});
 
 });

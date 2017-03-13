@@ -10,7 +10,7 @@ export const signupUserFulfilled = (payload) => {
 };
 
 export const signupUserError = (payload) => {
-    return {type: 'SIGNUP_USER_ERROR'};
+    return {type: 'SIGNUP_USER_ERROR', payload};
 };
 
 export const signupUser = (userInfo) => (dispatch) => {
@@ -18,7 +18,7 @@ export const signupUser = (userInfo) => (dispatch) => {
 
     return axios.post('/api/auth/signup', userInfo)
     .then(response => dispatch(signupUserFulfilled(response.data)))
-    .catch(error => dispatch(signupUserError(error.data)));
+    .catch(error => dispatch(signupUserError(error.response)));
 };
 
 export const loginUserStart = () => {
@@ -30,7 +30,7 @@ export const loginUserFulfilled = (payload) => {
 };
 
 export const loginUserError = (payload) => {
-    return {type: 'LOGIN_USER_ERROR'};
+    return {type: 'LOGIN_USER_ERROR', payload};
 };
 
 export const loginUser = (userInfo) => (dispatch) => {
@@ -38,7 +38,7 @@ export const loginUser = (userInfo) => (dispatch) => {
 
     return axios.post('/api/auth', userInfo)
     .then(response => dispatch(loginUserFulfilled(response.data)))
-    .catch(error => dispatch(loginUserError(error.data)));
+    .catch(error => dispatch(loginUserError(error.response)));
 };
 
 export const checkUserStart = () => {
@@ -49,8 +49,8 @@ export const checkUserFulfilled = (payload) => {
     return {type: 'CHECK_USER_FULFILLED', payload };
 };
 
-export const checkUserError = () => {
-    return {type: 'CHECK_USER_ERROR'};
+export const checkUserError = (payload) => {
+    return {type: 'CHECK_USER_ERROR', payload};
 };
 
 export const checkUser = () => (dispatch) => {
@@ -60,5 +60,5 @@ export const checkUser = () => (dispatch) => {
     .then(response => {
         return dispatch(checkUserFulfilled(response.data))
     })
-    .catch(error => dispatch(checkUserError()));
+    .catch(error => dispatch(checkUserError(error.response)));
 };

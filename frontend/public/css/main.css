@@ -1,5 +1,14 @@
 body {
     margin: 0;
+    height: 100vh;
+}
+#app {
+    height: 100%;
+}
+[data-reactroot] {
+    height: 100% !important; 
+    display: flex;
+    flex-direction: column;
 }
 
 .loading {
