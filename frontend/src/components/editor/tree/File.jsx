@@ -4,24 +4,15 @@ import React from 'react';
 class File extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-            style : {
-                width: '100%', 
-                height: 20,
-                cursor: 'pointer'
-            }
-        }
     }
 
-    handleClick() {
-        this.setState({style: {...this.state.style, backgroundColor: 'rgba(0, 188, 212, 0.3)'}})
-    }
 
 
     render() {
-        return <div style={this.state.style} onClick={this.handleClick.bind(this)}>
+        const style = {...this.props.style, marginTop: '1px', padding: '2px 0 2px 1px', borderRadius: '4px', cursor: 'pointer'}
+        return <div style={style} onClick={this.props.onSelect}>
             <span className="fa fa-file"></span>
-            <span style={{marginTop: '10px', padding: '9px 0 9px 8px'}}>index.html</span>
+            <span style={{padding: '9px 0 9px 8px'}}>{this.props.file.name}</span>
         </div>
     }
 }

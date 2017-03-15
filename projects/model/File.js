@@ -8,7 +8,7 @@ var fileSchema = new Schema({
     path: { type: String, required: true },
     node_type: { type: String, required: true, enum: ['D', 'F'] },
     contents: String,
-
+    file_type: {type: String, enum: ['html', 'css', 'javascript']},
     created_at: Date,
     updated_at: Date 
 });
@@ -32,9 +32,11 @@ fileSchema.methods.rest = function() {
         name: this.name,
         path: this.path,
         node_type: this.node_type,
+        file_type: this.file_type,
         contents: this.node_type === 'F' ? this.contents : undefined,
         created_at: this.created_at,
-        updated_at: this.updated_at
+        updated_at: this.updated_at,
+        children: this.node_type === 'D' ? [] : undefined, 
     };
 }
 

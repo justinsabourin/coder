@@ -16,7 +16,7 @@ import TextField from 'material-ui/TextField';
 class Projects extends React.Component {
     constructor(props) {
         super(props);
-        props.getProjects(props.user);
+        props.getProjects();
         this.state =  {
             open: false,
         };
@@ -32,7 +32,7 @@ class Projects extends React.Component {
 
     createProject() {
         this.handleClose();
-        this.props.createProject({name: this.name.input.value, username: this.props.user});
+        this.props.createProject(this.name.input.value);
     }
 
     render() {
@@ -120,7 +120,6 @@ class Projects extends React.Component {
 const mapStateToProps = (state) => {
   return {
     projects: state.projects.list,
-    user: state.user.username,
     isLoading: state.projects.loading,
     errorMessage: state.projects.error
   }
@@ -128,8 +127,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        getProjects: (username) => {
-            dispatch(getProjects(username))
+        getProjects: () => {
+            dispatch(getProjects())
         },
         createProject: (project) => {
             dispatch(createProject(project))

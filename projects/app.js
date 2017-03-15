@@ -34,7 +34,7 @@ mongoose.connect('mongodb://localhost/webeditor', function(err) {
 
 
 app.use(function(req, res, next) {
-    req.user = req.session.passport.user;
+    req.user = req.session && req.session.passport && req.session.passport.user;
     if (!req.user) return next({status: 401, message: "Unauthorized"});
     if (req.params.username && req.user.username !== req.params.username)
         return next({status: 401, message: "Unauthorized"});
@@ -53,6 +53,26 @@ const normalizePath = function(req, res, next) {
     next();
 };
 
+const validateFile = function(req, res, next) {
+    var fileName = req.params.path.slice(req.params.path.lastIndexOf('/') + 1);
+    var message;
+    if (req.body.type === 'F') {
+        match = /^[a-zA-Z0-9]+.(html|js|css)$/g.exec(fileName);
+        if (!match || !match[1]) {
+            return next({status: 400, message: "You can only create html, css or javascript files"});
+        } 
+        req.body.file_type = match[1] === 'js' ? 'javascript' : match[1];
+    } else if (req.body.type === 'D') {
+        match = fileName.match(/^[a-zA-Z0-9]+$/g);
+        if (!match) {
+            return next({status: 400, message: "Directory names must be alphanumeric"});
+        }
+    } else {
+        return next({status: 400, message: "Unrecognized type"});
+    }
+    next();
+};
+
 // Create project
 app.post('/api/projects/user/:username/projects/', function(req, res, next) {
     var newProject = new Project({
@@ -60,7 +80,6 @@ app.post('/api/projects/user/:username/projects/', function(req, res, next) {
         project_name: req.body.project_name
     });
     newProject.save((err) => {
-        console.log(err);
         if (err) return next(err);
         return res.json(newProject.rest());
     });
@@ -71,9 +90,8 @@ app.get('/api/projects/user/:username/projects/:project', function(req, res, nex
     Project.findOne({ creator: req.params.username, project_name: req.params.project }, (err, project) => {
         if (err) return next({status: 500, message: err.message});
         if (!project) return next({status: 404, message: 'Project doesnt exist'});
-        project.getTreeStructure((err, tree) => {
+        project.getFlattenedTree((err, tree) => {
             if (err) return next({status: 500, message: err.message});
-            console.log(tree);
             res.json(tree);
         });
     });
@@ -87,12 +105,11 @@ app.get('/api/projects/user/:username/projects', function(req, res, next) {
 });
 
 // Create file for project
-app.post('/api/projects/user/:username/projects/:project/*', normalizePath, function(req, res, next) {
+app.put('/api/projects/user/:username/projects/:project/*', normalizePath, validateFile, function(req, res, next) {
     Project.findOne( { creator: req.params.username, project_name: req.params.project }, (err, project) => {
         if (err) return next({status: 500, message: err.message});
         if (!project) return next({status: 404, message: 'Project doesnt exist'});
-        project.addFile(req.params.path, req.body.contents, req.body.type, function(err, newFile) {
-            console.log(err);
+        project.addFile(req.params.path, req.body.contents || "", req.body, function(err, newFile) {
             if (err) return next({status: 500, message: err.message});
             res.json(newFile.rest());
         });
@@ -122,7 +139,10 @@ app.get('/api/projects/user/:username/projects/:project/*', normalizePath, funct
 
 // Delete file for project
 app.delete('/api/projects/user/:username/projects/:project/*', normalizePath, function(req, res, next) {
-    return;
+    Project.deleteFile(req.params.project, req.params.username, req.params.path, function(err) {
+        if (err) return next({status: 500, message: err.message});
+        res.end();
+    });
 });
 
 app.use(function (err, req, res, next) {

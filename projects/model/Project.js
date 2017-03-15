@@ -2,6 +2,9 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var File = require('./File');
 
+const welcomeMessage = `
+Welcome! `;
+
 var projectSchema = new Schema({
     project_name: { type: String, required: true},
     creator: { type: String, required: true },
@@ -9,6 +12,21 @@ var projectSchema = new Schema({
 });
 
 projectSchema.index({creator: 1, project_name: -1}, {unique: true});
+
+
+projectSchema.pre('save', function(next) {
+    var newFile = new File({
+        project_name: this.project_name,
+        creator: this.creator,
+        name: 'index.html',
+        path: '/index.html',
+        node_type: 'F',
+        file_type: 'html',
+        contents: welcomeMessage,
+    });
+
+    newFile.save(next);
+});
 
 projectSchema.methods.rest = function(){
     return {
@@ -45,7 +63,31 @@ projectSchema.methods.getTreeStructure = function(cb) {
     });
 };
 
-projectSchema.methods.addFile = function(filePath, fileContents, fileType, cb) {
+projectSchema.methods.getFlattenedTree = function(cb) {
+    File.find({ project_name: this.project_name, creator: this.creator}, 'name path node_type file_type created_at updated_at')
+    .sort({'path.length' : 1})
+    .exec((err, nodes) => {
+        if (err) return cb(err);
+        
+        var tree = {};
+        tree.files = {};
+        nodes.forEach((node) => {
+            tree.files[node.path] = node.rest();
+            tree.files[node.path].children = [];
+            var parentPath = node.path.slice(0, node.path.lastIndexOf('/'));
+            if (parentPath === "") return;
+            tree.files[parentPath].children.push(node.path);
+        });
+
+
+        tree.project_name = this.project_name;
+        tree.creator = this.creator;
+        return cb(null, tree);
+
+    });
+}
+
+projectSchema.methods.addFile = function(filePath, fileContents, file, cb) {
     var splitter = filePath.lastIndexOf('/');
     var fileName = filePath.slice(splitter + 1);
 
@@ -55,7 +97,8 @@ projectSchema.methods.addFile = function(filePath, fileContents, fileType, cb) {
                 creator: this.creator,
                 name: fileName,
                 path: filePath,
-                node_type: fileType,
+                node_type: file.type,
+                file_type: file.file_type,
                 contents: fileContents,
         });
 
@@ -71,7 +114,6 @@ projectSchema.methods.addFile = function(filePath, fileContents, fileType, cb) {
         var path = filePath.slice(0, splitter);
         File.findOne({ project_name: this.project_name, creator: this.creator, path: path }, "node_type", (err, file) => {
             if (err) return cb(err);
-            console.log(file);
             if (!file) return cb({message: "Top-level directory does not exist"});
             if (file.node_type !== 'D') return cb({message: "Can't create file inside another file"});
             saveFile();
@@ -88,6 +130,10 @@ projectSchema.statics.updateFile = function(projectName, creator, filePath, file
 
 projectSchema.statics.getFile = function(projectName, creator, filePath, cb) {
     File.findOne({ project_name: projectName, creator: creator, path: filePath}, cb); 
+};
+
+projectSchema.statics.deleteFile = function(projectName, creator, filePath, cb) {
+    File.remove({ project_name: projectName, creator: creator, path: new RegExp('^' + filePath +'(/[a-zA-Z0-9.]*)*$', 'g')}, cb); 
 };
 
 projectSchema.statics.getProjects = function(username, cb) {

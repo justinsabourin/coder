@@ -13,10 +13,10 @@ export const getProjectsError = (payload) => {
     return {type: 'GET_PROJECTS_ERROR', payload};
 };
 
-export const getProjects = (username) => (dispatch) => {
+export const getProjects = () => (dispatch, getState) => {
     dispatch(getProjectsStart());
-
-    return axios.get('/api/projects/user/' + username + '/projects')
+    var state = getState();
+    return axios.get('/api/projects/user/' + state.user.username + '/projects')
     .then(response => dispatch(getProjectsFulfilled(response.data)))
     .catch(error => dispatch(getProjectsError(error.response)));
 };
@@ -33,10 +33,10 @@ export const createProjectError = (payload) => {
     return {type: 'CREATE_PROJECT_ERROR', payload};
 };
 
-export const createProject = (project) => (dispatch) => {
+export const createProject = (projectName) => (dispatch, getState) => {
     dispatch(createProjectStart());
-
-    return axios.post('/api/projects/user/' + project.username + '/projects', {project_name: project.name})
+    var state = getState();
+    return axios.post('/api/projects/user/' + state.user.username + '/projects', {project_name: projectName})
     .then(response => dispatch(createProjectFulfilled(response.data)))
     .catch(error => dispatch(createProjectError(error.response)));
 };
