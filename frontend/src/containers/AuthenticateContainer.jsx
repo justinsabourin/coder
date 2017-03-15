@@ -20,7 +20,7 @@ class AuthenticateContainer extends React.Component {
         } else if (this.props.isLoggedIn) {
             return this.props.children;
         } else {
-            return <span> blah</span>;
+            return <span>Something went wrong, try refreshing</span>;
         }
     }
 }

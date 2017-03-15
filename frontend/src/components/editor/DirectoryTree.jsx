@@ -1,5 +1,11 @@
 import React from 'react';
+import { connect } from 'react-redux';
+
+import { addFile, startFileAdd, terminateFileAdd, deleteFile, selectFile } from '../../actions/directoryTreeActions.jsx';
+import { openFile } from '../../actions/filesActions.jsx';
+
 import Drawer from 'material-ui/Drawer';
+
 import File from './tree/File.jsx';
 import Directory from './tree/Directory.jsx';
 import FileToolBar from './tree/FileToolBar.jsx';
@@ -10,42 +16,33 @@ class DirectoryTree extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            selected: {},
-            addingFile: {}
+            tooltip: null
         }
-
     }
 
-    onFileSelect(path, type, e) {
-        this.setState({selected: {path, type}, addingFile: {}});
+    onFileSelect(path, type) {
+        this.props.selectFile(path, type);
         if (type === 'F') {
             this.props.openFile(path);
-        }
+        } 
 
     }
 
-    onAddNode(type) {
-        this.setState({addingFile: {type} });
-    }
 
-    onCreateNode(value) {
-        if (!value) {
-            this.setState({addingFile: {}});
-            return;
+    createNode(fileName) {
+        if (!fileName) {
+            this.state.tooltip = null;
+            return this.props.terminateFileAdd();
         }
-        var path = (this.state.selected.path || '') + '/' + value;
+        var path = (this.props.selected.path || '') + '/' + fileName;
         if (this.props.tree[path]) {
-            this.setState({addingFile: {...this.state.addingFile, tooltip: 'File already exists'}})
+            this.setState({tooltip: 'File already exists'})
         } else {
-            this.props.addFile(path, this.state.addingFile.type);
-            this.setState({selected: {}, addingFile: {}});
+            this.state.tooltip = null;
+            this.props.addFile(path);
         }
     }
 
-    onDeleteNode() {
-        this.props.deleteFile(this.state.selected.path);
-        this.state.selected = {};
-    }
 
     stopPropagation(e) {
         e.stopPropagation();
@@ -59,37 +56,37 @@ class DirectoryTree extends React.Component {
             return node.node_type === 'F' ?
                 <File key={node.path} 
                     file={node} 
-                    style={node.path === this.state.selected.path && style}
+                    style={node.path === this.props.selected.path ? style : undefined}
                     onSelect={this.onFileSelect.bind(this, node.path, node.node_type)}/>
                 : <Directory key={node.path} 
                     file={node} 
-                    open={this.state.addingFile.type && this.state.selected.path === node.path}
-                    style={node.path === this.state.selected.path && style}
+                    open={node.open}
+                    style={node.path === this.props.selected.path ? style : undefined}
                     onSelect={this.onFileSelect.bind(this, node.path, node.node_type)}>
                         
                         {Object.values(node.children).map(treeCreate)}
-                        {this.state.addingFile.type && this.state.selected.path === node.path ?
-                            <NewNode onEnter={this.onCreateNode.bind(this)} type={this.state.addingFile.type} tooltip={this.state.addingFile.tooltip} />
+                        {this.props.newFile.type && this.props.selected.path === node.path ?
+                            <NewNode onEnter={this.createNode.bind(this)} type={this.props.newFile.type} tooltip={this.state.tooltip} />
                             : null
                         }
                 </Directory>
         }
 
-        return <div onClick={() => this.setState({selected: {}, addingFile: {}})}>
+        return <div onClick={() => this.props.selectFile()}>
             <Drawer open={this.props.open} openSecondary={true} width={300}>
-                <FileToolBar selected={this.state.selected} 
-                             disableTrash={!!this.state.addingFile.type}
+                <FileToolBar selected={this.props.selected} 
+                             disableTrash={!!this.props.newFile.type}
                              onClose={this.props.onClose}
                              onClick={this.stopPropagation}
-                             onAddNode={this.onAddNode.bind(this)}
-                             onDelete={this.onDeleteNode.bind(this)}
+                             onAddNode={this.props.startFileAdd}
+                             onDelete={this.props.deleteFile}
                              />
-                <div style={{marginLeft: 5, marginTop: 10}} onClick={this.stopPropagation}>
+                <div className="tree" onClick={this.stopPropagation}>
                     {Object.values(this.props.tree)
                     .reduce((accum, node) => node.path.split('/').length === 2  ? accum.concat(node.path) : accum, [])
                     .map(treeCreate)}
-                    {this.state.addingFile.type && !this.state.selected.path ?
-                        <NewNode onEnter={this.onCreateNode.bind(this)} type={this.state.addingFile.type} tooltip={this.state.addingFile.tooltip} />
+                    {this.props.newFile.type && !this.props.selected.path ?
+                        <NewNode onEnter={this.createNode.bind(this)} type={this.props.newFile.type} tooltip={this.state.tooltip} />
                         : null
                     }
                 </div>
@@ -99,4 +96,35 @@ class DirectoryTree extends React.Component {
     }
 }
 
-export default DirectoryTree;
+const mapStateToProps = (state) => {
+  return {
+    tree: state.directoryTree.tree,
+    selected: state.directoryTree.selected,
+    newFile: state.directoryTree.newFile,
+  }
+}
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        openFile: (path) => {
+            dispatch(openFile(path))
+        },
+        addFile: (path) => {
+            dispatch(addFile(path))
+        },
+        startFileAdd: (type) => {
+            dispatch(startFileAdd(type))
+        },
+        terminateFileAdd: () => {
+            dispatch(terminateFileAdd());
+        },
+        deleteFile: () => {
+            dispatch(deleteFile())
+        },
+        selectFile: (path, type) => {
+            dispatch(selectFile(path, type))
+        }
+    };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(DirectoryTree);
