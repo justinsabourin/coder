@@ -7,6 +7,7 @@ export const terminateFileAdd = () => ({ type: 'TERMINATE_FILE_ADD'})
 
 export const selectFile = (path, type) => ({ type: 'SELECT_FILE', payload: {path, type} })
 
+export const toggleDirectoryView = () => ({ type: 'TOGGLE_DIRECTORY_VIEW' });
 
 export const addFileFulfilled = (payload) => {
     return {type: 'ADD_FILE_FULFILLED', payload };

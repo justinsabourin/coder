@@ -10,7 +10,10 @@ const reducer = function(state={
                 open: [action.payload].concat(state.open)
             }
         case 'DELETE_FILE_FULFILLED':
-            var index = state.open.findIndex((file) => file.path === action.payload);
+            var index = state.open.findIndex((file) => {
+                if (file.node_type !== 'F') return false; 
+                else return file.path === action.payload
+            });
             if (index === -1) {
                 return state;
             }
@@ -28,6 +31,16 @@ const reducer = function(state={
                 ...state.open[state.active],
                 contents: action.payload,
                 dirty: true
+            } 
+            return {
+                ...state,
+                open: openCopy
+            }
+        case 'SAVE_FILE':
+            var openCopy = [...state.open]
+            openCopy[state.active] = {
+                ...state.open[state.active],
+                dirty: false
             } 
             return {
                 ...state,

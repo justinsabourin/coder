@@ -19,7 +19,7 @@ app.use(session({
       host: 'localhost',
       port: 6379,
       client: redisCli,
-      ttl: 260,
+      disableTtl: true,
     }),
     saveUninitialized: true,
 }));

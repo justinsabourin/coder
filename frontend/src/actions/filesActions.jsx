@@ -36,3 +36,47 @@ export const openFile = (path) => (dispatch, getState) => {
     .then(response => dispatch(openFileFulfilled(response.data)))
     .catch(error => dispatch(openFileError(error.response)));
 };
+
+
+export const saveFileStart = () => {
+    return {type: 'SAVE_FILE'};
+};
+
+export const saveFileFulfilled = (payload) => {
+    return {type: 'SAVE_FILE_FULFILLED', payload };
+};
+
+export const saveFileError = (payload) => {
+    return {type: 'SAVE_FILE_ERROR', payload};
+};
+
+export const saveFile = () => (dispatch, getState) => {
+    var state = getState();
+    var { creator, project_name } = state.project.metadata;
+    var { path, contents } = state.files.open[state.files.active];
+    dispatch(saveFileStart());
+
+    return axios.patch(`/api/projects/user/${creator}/projects/${project_name}${path}`, {contents})
+    .then(response => dispatch(saveFileFulfilled(response.data)))
+    .catch(error => dispatch(saveFileError(error.response)));
+};
+
+
+export const viewProjectNewTab = () => (dispatch, getState) => {
+    var state = getState();
+    var { creator, project_name } = state.project.metadata;
+    window.open(`/staticcontent/user/${creator}/projects/${project_name}/`, '_blank');
+}
+
+export const viewProjectinEditor = () => (dispatch, getState) => {
+    var state = getState();
+    var { creator, project_name } = state.project.metadata;
+    dispatch({
+        type: 'OPEN_FILE_FULFILLED', 
+        payload: {
+            path: `/staticcontent/user/${creator}/projects/${project_name}/`,
+            node_type: 'IFR',
+            name: 'Preview'
+        }
+    });
+}

@@ -2,6 +2,7 @@ const reducer = function(state={
     selected: {},
     tree: {},
     newFile: {},
+    open: false
 }, action) {
     switch(action.type) {
         case 'GET_PROJECT_FULFILLED':
@@ -79,7 +80,8 @@ const reducer = function(state={
             } else {
                 return {...state, newFile: {}, selected: action.payload};
             }
-            break;
+        case 'TOGGLE_DIRECTORY_VIEW':
+            return {...state, open: !state.open}
 
     }
     return state;

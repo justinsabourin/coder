@@ -15,6 +15,7 @@
 .tab-list {
     width: 100%; 
     display:flex;
+    overflow-x: auto;
 }
 
 .tab-list .tab {
@@ -45,4 +46,10 @@
 }
 .tab-active .close-tab, .close-tab:hover {
     color: white;
+}
+
+.editor-instructions {
+    font-family: 'Indie Flower';
+    font-size: 3em;
+    margin: 40px auto;
 }

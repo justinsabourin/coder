@@ -5,8 +5,8 @@ body {
 #app {
     height: 100%;
 }
-[data-reactroot] {
-    height: 100% !important; 
+#app [data-reactroot] {
+    height: 100%; 
     display: flex;
     flex-direction: column;
 }
@@ -15,4 +15,12 @@ body {
     height: 100vh;
     width: 100vw;
     background-color: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.icon:disabled {
+    color: gray;
 }
