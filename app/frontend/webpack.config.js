@@ -1,3 +1,4 @@
+var webpack = require('webpack')
 module.exports = {
    entry: __dirname + '/src/index.jsx',
 	
@@ -12,7 +13,15 @@ module.exports = {
        hot: true,
        port: 8081,
    },
-   
+
+    plugins: process.env.NODE_ENV === 'production' ? [
+        new webpack.optimize.OccurrenceOrderPlugin(),
+        new webpack.optimize.UglifyJsPlugin(),
+        new webpack.DefinePlugin({
+            'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
+        })
+    ] : [],
+    
 
    module: {
       loaders: [
@@ -22,7 +31,7 @@ module.exports = {
             loader: 'babel-loader',
 				
             query: {
-               presets: ['react']
+               presets: ['es2015' ,'react', 'stage-2']
             }
          }
       ]

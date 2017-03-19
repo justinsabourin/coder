@@ -61,7 +61,6 @@ export const checkUser = () => (dispatch) => {
         return dispatch(checkUserFulfilled(response.data))
     })
     .catch(error => {
-        console.log(error);
         return dispatch(checkUserError(error.response))
     });
 };

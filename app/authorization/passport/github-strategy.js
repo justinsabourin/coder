@@ -4,7 +4,7 @@ var User = require('../model/User');
 module.exports = new GithubStrategy({
   clientID: 'cb3fd393d5dca44e0160',
   clientSecret: '449c9b4a4a004a57248a4a542af3efe610d19e20',
-  callbackURL: 'http://localhost:8080/api/auth/github/callback'
+  callbackURL: 'https://localhost:8080/api/auth/github/callback'
 }, function(accessToken, refreshToken, profile, done){
     User.findByUsername(profile.username, function(err, user) {
         if (err) return done(err);

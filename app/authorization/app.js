@@ -14,7 +14,6 @@ var User = require('./model/User');
 mongoose.connect('mongodb://localhost/webeditor', function(err) {
   if (err) {
     console.error('Unable to connect to mongoDB: ', err);
-    process.exit(1);
   }
 });
 
@@ -30,6 +29,7 @@ app.use(session({
       disableTTL: true
     }),
     saveUninitialized: true,
+    cookie: {httpOnly: true, sameSite: true} // HAProxy handles setting the secure property
 }));
 app.use(passport.initialize());
 app.use(passport.session());
@@ -70,10 +70,8 @@ app.post('/api/auth',
 
 app.get('/api/auth/self', function (req, res, next)  {
     if (req.user) {
-      console.log(req.user);
       return res.json(req.user);
     }
-    console.log('error');
     next({status: 401, message: "Not authenticated"});
 
 });
@@ -89,6 +87,6 @@ app.use(function (err, req, res, next) {
 
 
 app.listen(8082, function () {
-  console.log('Example app listening on port 3000!')
+  console.log('Authorization service listening on port 8082')
 });
 

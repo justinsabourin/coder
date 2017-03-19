@@ -22,13 +22,13 @@ app.use(session({
       disableTtl: true,
     }),
     saveUninitialized: true,
+    cookie: {httpOnly: true, sameSite: true} // HAProxy handles setting the secure property
 }));
 
 // connect to mongodb
 mongoose.connect('mongodb://localhost/webeditor', function(err) {
   if (err) {
     console.error('Unable to connect to mongoDB: ', err);
-    process.exit(1);
   }
 });
 
@@ -123,7 +123,6 @@ app.put('/api/projects/user/:username/projects/:project/*', normalizePath, valid
 app.patch('/api/projects/user/:username/projects/:project/*', normalizePath, function(req, res, next) {
     Project.updateFile(req.params.project, req.params.username, req.params.path, req.body.contents, function(err, updatedFile) {
         if (err) return next({status: 500, message: err.message});
-        console.log(updatedFile);
         res.json(updatedFile.rest());
     });
 });
@@ -154,5 +153,5 @@ app.use(function (err, req, res, next) {
 });
 
 app.listen(8083, function () {
-  console.log('Example app listening on port 8083!')
+  console.log('Projects service listening on port 8083');
 });

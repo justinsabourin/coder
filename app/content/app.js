@@ -11,7 +11,6 @@ var File = require('./model/File');
 mongoose.connect('mongodb://localhost/webeditor', function(err) {
   if (err) {
     console.error('Unable to connect to mongoDB: ', err);
-    process.exit(1);
   }
 });
 
@@ -49,5 +48,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(8084, function () {
-  console.log('Example app listening on port 8083!')
+  console.log('Content service listening on port 8083')
 });
