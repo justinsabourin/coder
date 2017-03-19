@@ -34,6 +34,13 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+app.get('/api/auth/logout', function(req, res, next) {
+  if (!req.user) {
+    return res.json({status: 401, message: 'Unauthenticated'});
+  }
+  req.logout();
+  res.end();
+});
 
 
 app.get('/api/auth/github', passport.authenticate('github'));
@@ -55,9 +62,11 @@ app.post('/api/auth/signup', function(req, res, next) {
       });
       newUser.save((err) =>{
         if (err) return next(err);
-        res.json(newUser.rest());
+        req.login(newUser, (err) => {
+            if (err) return next({status: 500, message: err});
+            return res.json(newUser.rest());
+        });
       });
-      
     });
 });
 

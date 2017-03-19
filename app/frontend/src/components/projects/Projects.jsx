@@ -2,6 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 
 import { getProjects, createProject } from '../../actions/projectsActions.jsx'
+import { userLogout } from '../../actions/userActions.jsx'
 
 import ProjectList from './ProjectList.jsx';
 import Loader from '../shared/Loader.jsx';
@@ -11,6 +12,7 @@ import FlatButton from 'material-ui/FlatButton';
 import FontIcon from 'material-ui/FontIcon';
 import Dialog from 'material-ui/Dialog';
 import TextField from 'material-ui/TextField';
+import IconButton from 'material-ui/IconButton';
 
 
 class Projects extends React.Component {
@@ -20,6 +22,10 @@ class Projects extends React.Component {
         this.state =  {
             open: false,
         };
+    }
+
+    handleLogout() {
+
     }
 
     handleOpen() {
@@ -51,9 +57,9 @@ class Projects extends React.Component {
         let projectsDisplay;
         if (this.props.isLoading) {
             projectsDisplay = <Loader />;
-        } else if (this.props.projects === []){
+        } else if (this.props.projects.length === 0){
             var message = this.props.errorMessage || "No Projects";
-            projectsDisplay = <h3 className=".empty-projects-message">
+            projectsDisplay = <h3 className="empty-projects-message">
                 {message}
             </h3>;
         } else {
@@ -63,12 +69,17 @@ class Projects extends React.Component {
             <AppBar
                 title="Projects"
                 titleStyle={{fontFamily: 'Indie Flower', fontSize: '2.4em'}}
-                showMenuIconButton={false}
                 iconElementRight={<FlatButton
-                            label="New Project"
-                            icon={<FontIcon className="fa fa-plus" />}
-                            onTouchTap={this.handleOpen.bind(this)}
-                            /> }
+                                    label="New Project"
+                                    icon={<FontIcon className="fa fa-plus" />}
+                                    onTouchTap={this.handleOpen.bind(this)}
+                                    /> }
+                iconElementLeft={<IconButton
+                                    iconClassName="fa fa-sign-out"
+                                    onTouchTap={this.props.logOut}
+                                    tooltip="Sign out"
+                                    /> }
+                
             />
             {projectsDisplay}
             
@@ -106,6 +117,9 @@ const mapDispatchToProps = (dispatch) => {
         },
         createProject: (project) => {
             dispatch(createProject(project))
+        },
+        logOut: () => {
+            dispatch(userLogout());
         }
     };
 }

@@ -23,6 +23,15 @@ const reducer = function(state={
         case 'LOGIN_USER_FULFILLED': 
             newAuth = {...state.auth, isLoggingIn: false, isLoggedIn: true, error: null}
             return {...state, username: action.payload.username, auth: newAuth}
+        case 'LOG_OUT':
+            return {
+                username: null,
+                auth: {
+                    isLoggedIn: false,
+                    isLoggingIn: false,
+                    error: null
+                }
+            }
     }
     return state;
 }

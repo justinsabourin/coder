@@ -1,6 +1,8 @@
 import axios from "axios";
 
 
+export const userLogout = () => ({ type: 'LOG_OUT' });
+
 export const signupUserStart = () => {
     return {type: 'SIGNUP_USER'};
 };
