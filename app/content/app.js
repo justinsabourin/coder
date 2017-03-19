@@ -48,5 +48,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(8084, function () {
-  console.log('Content service listening on port 8083')
+  console.log('Content service listening on port 8084')
 });

@@ -1,6 +1,15 @@
 # An Online Web Editor
 
-# Running the application
+# Running the application with docker
+
+```
+docker build -t teamunknown .
+docker run -p 8080:8080 --name site_container -d teamunknown
+```
+
+Then go to [https://localhost:8080]()
+
+# Running the application for development
 Install [MongoDB](https://docs.mongodb.com/getting-started/shell/installation/), [Redis](https://redis.io/download), [HAProxy](http://www.haproxy.org/#down) and start them all (To start haproxy, go to root of repository and run ```haproxy -f haroxy.cfg```).
 
 ## Run Frontend
