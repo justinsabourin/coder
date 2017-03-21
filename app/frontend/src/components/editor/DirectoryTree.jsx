@@ -64,7 +64,7 @@ class DirectoryTree extends React.Component {
                     style={node.path === this.props.selected.path ? style : undefined}
                     onSelect={this.onFileSelect.bind(this, node.path, node.node_type)}>
                         
-                        {Object.values(node.children).map(treeCreate)}
+                        {node.children && node.children.map(treeCreate)}
                         {this.props.newFile.type && this.props.selected.path === node.path ?
                             <NewNode onEnter={this.createNode.bind(this)} type={this.props.newFile.type} tooltip={this.state.tooltip} />
                             : null
@@ -82,8 +82,8 @@ class DirectoryTree extends React.Component {
                              onDelete={this.props.deleteFile}
                              />
                 <div className="tree" onClick={this.stopPropagation}>
-                    {Object.values(this.props.tree)
-                    .reduce((accum, node) => node.path.split('/').length === 2  ? accum.concat(node.path) : accum, [])
+                    {Object.keys(this.props.tree)
+                    .reduce((accum, path) => path.split('/').length === 2  ? accum.concat(path) : accum, [])
                     .map(treeCreate)}
                     {this.props.newFile.type && !this.props.selected.path ?
                         <NewNode onEnter={this.createNode.bind(this)} type={this.props.newFile.type} tooltip={this.state.tooltip} />

@@ -6,9 +6,15 @@
 }
 
 .projects-container .grid-list {
-    width: 500px;
+    width: 700px;
     height: 450px;
-    overflow-y: auto;
+}
+
+.grid-list .tile {
+    border: 2px solid rgb(0, 188, 212);
+    border-radius: 5px;
+    margin: 10px;
+
 }
 
 .empty-projects-message {

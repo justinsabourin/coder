@@ -9,28 +9,23 @@ docker run -p 8080:8080 --name site_container -d teamunknown
 
 Then go to [https://localhost:8080]()
 
-# Running the application for development
-Install [MongoDB](https://docs.mongodb.com/getting-started/shell/installation/), [Redis](https://redis.io/download), [HAProxy](http://www.haproxy.org/#down) and start them all (To start haproxy, go to root of repository and run ```haproxy -f haroxy.cfg```).
+# Running the application locally
+Install [MongoDB](https://docs.mongodb.com/getting-started/shell/installation/) and [Memcached](https://memcached.org/downloads).
 
-## Run Frontend
+## Run development
 ```
-cd frontend
+cd app
 npm install
-npm run watch
+npm start
 ```
 
-## Run Authentication Service
+## Run production
 ```
-cd authorization
-npm install
-node app.js
-``` 
+cd app
+npm install --production
+NODE_ENV="production" npm start
+```
 
-## Run Project Service
-```
-cd projects
-npm install
-node app.js
 ```
 # Team Members
 

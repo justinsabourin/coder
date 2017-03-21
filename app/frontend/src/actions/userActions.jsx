@@ -1,7 +1,10 @@
 import axios from "axios";
 
 
-export const userLogout = () => ({ type: 'LOG_OUT' });
+export const userLogout = () => {
+    axios.get('/api/auth/logout')
+    return { type: 'LOG_OUT' }
+};
 
 export const signupUserStart = () => {
     return {type: 'SIGNUP_USER'};

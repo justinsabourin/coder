@@ -43,13 +43,13 @@ class Editor extends React.Component {
     
     render() {
         const { openFiles, activeFile, updateFileContents, switchTab, closeTab } = this.props;
-        if (openFiles.length === 0) {
+        /*if (openFiles.length === 0) {
             return <div className="editor-instructions">
                 <div>
                     Click the <span className="fa fa-folder"></span> icon or press &#8984;+\  ( Ctrl+\ )  to open up a file!
                 </div>
             </div> 
-        }
+        }*/
 
         var view;
         switch(activeFile.node_type) {

@@ -2,7 +2,7 @@ const reducer = function(state={
     selected: {},
     tree: {},
     newFile: {},
-    open: false
+    open: true
 }, action) {
     switch(action.type) {
         case 'GET_PROJECT_FULFILLED':

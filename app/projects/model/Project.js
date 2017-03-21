@@ -1,12 +1,17 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
-var File = require('./File');
+var File = require('../../model/File');
 
-const welcomeMessage = `
-Welcome! `;
+
 
 var projectSchema = new Schema({
-    project_name: { type: String, required: true},
+    project_name: { 
+        type: String, 
+        required: true, 
+        minlength: [2, 'Username must be between 2 and 15 characters'], 
+        maxlength: [15, 'Username must be between 2 and 15 characters'],
+        match: [/^[0-9a-zA-Z]+$/, "Username must be alphanumeric"]
+    },
     creator: { type: String, required: true },
     // more project specific settings we can add
 });
@@ -15,6 +20,41 @@ projectSchema.index({creator: 1, project_name: -1}, {unique: true});
 
 
 projectSchema.pre('save', function(next) {
+    // have to break indentation, TODO: look for workaround
+    const welcomeMessage = 
+`<html>
+    <head>
+        <title>${this.creator}</title>
+        <style>
+            body {
+                background-color: #efffff;
+            }
+            
+            .container {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100vw;
+                height: 90vh;
+            }
+            
+            .text {
+                font-size: 5em;
+                color: black;
+                font-family: serif;
+            }
+            
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <span class="text">
+                ${this.project_name}
+            </span>
+        </div>
+    </body>
+</html>`;
+
     var newFile = new File({
         project_name: this.project_name,
         creator: this.creator,

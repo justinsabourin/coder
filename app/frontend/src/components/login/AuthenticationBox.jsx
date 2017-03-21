@@ -9,13 +9,45 @@ import Loader from '../shared/Loader.jsx';
 class AuthenticationBox extends React.Component { 
     constructor(props) {
         super(props);
+        this.state = {
+            usernameError: null,
+            passwordError: null,
+            username: "",
+            password: ""
+        }
     }  
+
+    onSubmit(e) {
+        e.preventDefault()
+        var username = this.state.username;
+        var password = this.state.password;
+
+        const errors = {
+            usernameError: null,
+            passwordError: null,
+        }
+
+        if (username.length < 3 || username.length > 15) {
+            errors.usernameError = "Username must be between 3 and 15 characters";
+        }
+        else if (!username.match(/^[0-9a-zA-Z]+$/)) {
+            errors.usernameError = "Username can only contain letters and numbers";
+        } 
+        if (password.length < 4 || password.length > 20) {
+            errors.passwordError = "Password must be between 4 and 20 characters";
+        }
+        this.setState(errors);
+        if (!errors.passwordError && !errors.usernameError) {
+            this.props.onPrimary({
+                username,
+                password
+            });
+        } 
+    }
 
     render() {
         var { props } = this;
-        if (props.isLoading) {
-            return <Loader />
-        }
+        
 
         var primary = props.onPrimary ? 
             <RaisedButton 
@@ -30,33 +62,38 @@ class AuthenticationBox extends React.Component {
                 label={props.secondaryLabel} 
                 onClick={props.onSecondary}/>
             : null;
+
+        var usernameError = props.authError.username || this.state.usernameError;
+        var passwordError = props.authError.password || this.state.passwordError;
         
         return <div className="login-container">
+            {props.isLoading &&
+                <Loader />
+            }
             <div className="login-box">
                 <div className="login-header">
                     {props.headerText}
                 </div>
-                <form className="login-body" onSubmit={(e) => {
-                        e.preventDefault();
-                        props.onPrimary({
-                            username: this.username.input.value,
-                            password: this.password.input.value
-                        });
-                    }
-                    }>
+                <form className="login-body" onSubmit={this.onSubmit.bind(this)}>
                     <div className="login-input">
                         <TextField
                             hintText="Username"
                             ref={(username) => this.username = username}
                             floatingLabelText="Username"
+                            value={this.state.username}
+                            onChange={(e) => this.setState({ username: e.target.value })}
                             floatingLabelStyle={{fontFamily: 'Indie Flower', fontSize: '1.7em'}}
+                            errorText={usernameError}
                         />
                         <TextField
                             hintText="Password"
                             ref={(password) => this.password = password}
                             floatingLabelText="Password"
+                            value={this.state.password}
+                            onChange={(e) => this.setState({ password: e.target.value })}
                             floatingLabelStyle={{fontFamily: 'Indie Flower', fontSize: '1.7em'}}
                             type="password"
+                            errorText={passwordError}
                         />
                         <div className="login-buttons">
                             {secondary}

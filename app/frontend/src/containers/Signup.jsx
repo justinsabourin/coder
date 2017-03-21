@@ -8,7 +8,8 @@ const mapStateToProps = (state) => {
     return {
         headerText: 'Sign up',
         primaryLabel: 'Sign up',
-        isLoading: state.user.auth.isLoggingIn
+        isLoading: state.user.auth.isLoggingIn,
+        authError: state.ui.authenticationError
     };
 }
 

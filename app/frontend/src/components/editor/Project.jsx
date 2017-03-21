@@ -1,5 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { Link } from 'react-router';
 
 import { getProject } from '../../actions/projectActions.jsx';
 import { saveFile, viewProjectNewTab, viewProjectinEditor } from '../../actions/filesActions.jsx';
@@ -36,7 +37,7 @@ class Project extends React.Component {
             <AppBar
                 title={this.props.metadata.project_name}
                 titleStyle={{fontFamily: 'Indie Flower', fontSize: '2.4em'}}
-                showMenuIconButton={false}>
+                iconElementLeft={<IconButton containerElement={<Link to='/'/>} iconStyle={{color: 'white', marginBottom: 35}} iconClassName="fa fa-arrow-left"></IconButton>}>
 
                 <IconMenu
                     iconButtonElement={<IconButton iconClassName="fa fa-eye" iconStyle={iconStyles} />}

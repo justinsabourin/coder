@@ -3,7 +3,6 @@ const reducer = function(state={
     auth: {
         isLoggedIn: false,
         isLoggingIn: false,
-        error: null
     }
 }, action) {
     let newAuth;
@@ -16,12 +15,12 @@ const reducer = function(state={
         case 'CHECK_USER_ERROR':
         case 'SIGNUP_USER_ERROR':
         case 'LOGIN_USER_ERROR':
-            newAuth = {...state.auth, isLoggingIn: false, error: 'ERROR!' }
+            newAuth = {...state.auth, isLoggingIn: false }
             return {...state, auth: newAuth }
         case 'CHECK_USER_FULFILLED':
         case 'SIGNUP_USER_FULFILLED':
         case 'LOGIN_USER_FULFILLED': 
-            newAuth = {...state.auth, isLoggingIn: false, isLoggedIn: true, error: null}
+            newAuth = {...state.auth, isLoggingIn: false, isLoggedIn: true}
             return {...state, username: action.payload.username, auth: newAuth}
         case 'LOG_OUT':
             return {
@@ -29,7 +28,6 @@ const reducer = function(state={
                 auth: {
                     isLoggedIn: false,
                     isLoggingIn: false,
-                    error: null
                 }
             }
     }

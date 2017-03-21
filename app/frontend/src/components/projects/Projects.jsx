@@ -1,8 +1,9 @@
 import React from 'react';
 import { connect } from 'react-redux';
 
-import { getProjects, createProject } from '../../actions/projectsActions.jsx'
-import { userLogout } from '../../actions/userActions.jsx'
+import { getProjects, createProject } from '../../actions/projectsActions.jsx';
+import { userLogout } from '../../actions/userActions.jsx';
+import { toggleCreate } from '../../actions/uiActions.jsx';
 
 import ProjectList from './ProjectList.jsx';
 import Loader from '../shared/Loader.jsx';
@@ -20,25 +21,25 @@ class Projects extends React.Component {
         super(props);
         props.getProjects();
         this.state =  {
-            open: false,
+            projectName: "",
+            projectNameError: null,
         };
     }
 
-    handleLogout() {
-
+    handleClose() {
+        this.setState({ projectName: "", projectNameError: null });
+        this.props.toggleCreate();
     }
 
-    handleOpen() {
-        this.setState({open: true});
-    };
-
-    handleClose() {
-        this.setState({open: false});
-    };
-
     createProject() {
-        this.handleClose();
-        this.props.createProject(this.name.input.value);
+        var projectName = this.state.projectName;
+        if (projectName.length < 2 || projectName.length > 15) {
+            return this.setState({ projectNameError: "Project name must be between 2 and 15 characters" })
+        } else if (!/^[0-9a-zA-Z]+$/.test(projectName)) {
+            this.setState({ projectNameError: "Project name must be alphanumeric" });
+        } else {
+            this.props.createProject(this.state.projectName);
+        }
     }
 
     render() {
@@ -54,6 +55,9 @@ class Projects extends React.Component {
                 onTouchTap={this.createProject.bind(this)}
             />,
         ];
+
+        const projectNameError = this.state.projectNameError || this.props.ui.createError;
+
         let projectsDisplay;
         if (this.props.isLoading) {
             projectsDisplay = <Loader />;
@@ -72,7 +76,7 @@ class Projects extends React.Component {
                 iconElementRight={<FlatButton
                                     label="New Project"
                                     icon={<FontIcon className="fa fa-plus" />}
-                                    onTouchTap={this.handleOpen.bind(this)}
+                                    onTouchTap={this.props.toggleCreate}
                                     /> }
                 iconElementLeft={<IconButton
                                     iconClassName="fa fa-sign-out"
@@ -87,12 +91,14 @@ class Projects extends React.Component {
                 title="Create Project"
                 actions={actions}
                 modal={true}
-                open={this.state.open}
+                open={this.props.ui.createOpen}
                 >
                 <TextField
                         hintText="Project Name"
-                        ref={(name) => this.name = name}
+                        value={this.state.projectName}
+                        onChange={(e) => this.setState({ projectName: e.target.value })}
                         floatingLabelText="Project Name"
+                        errorText={projectNameError}
                         floatingLabelStyle={{fontFamily: 'Indie Flower', fontSize: '1.7em'}}
                     />
             </Dialog>
@@ -106,7 +112,8 @@ const mapStateToProps = (state) => {
   return {
     projects: state.projects.list,
     isLoading: state.projects.loading,
-    errorMessage: state.projects.error
+    errorMessage: state.projects.error,
+    ui: state.ui.projects
   }
 }
 
@@ -120,6 +127,9 @@ const mapDispatchToProps = (dispatch) => {
         },
         logOut: () => {
             dispatch(userLogout());
+        },
+        toggleCreate: () => {
+            dispatch(toggleCreate())
         }
     };
 }

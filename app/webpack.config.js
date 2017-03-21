@@ -1,26 +1,20 @@
-var webpack = require('webpack')
+process.noDeprecation = true;
+var webpack = require('webpack');
 module.exports = {
-   entry: __dirname + '/src/index.jsx',
+   entry: __dirname + '/frontend/src/index.jsx',
 	
    output: {
-      path: __dirname + '/public/js/',
-      publicPath: '/js/',
+      path: __dirname + '/frontend/public/js/',
       filename: 'bundle.js',
    },
-	
-   devServer: {
-       contentBase: __dirname + '/public/',
-       hot: true,
-       port: 8081,
-   },
 
-    plugins: process.env.NODE_ENV === 'production' ? [
+    plugins:  [
         new webpack.optimize.OccurrenceOrderPlugin(),
         new webpack.optimize.UglifyJsPlugin(),
         new webpack.DefinePlugin({
             'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
         })
-    ] : [],
+    ],
     
 
    module: {

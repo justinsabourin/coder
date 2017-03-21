@@ -14,21 +14,29 @@ import reducers from './reducers/index.jsx';
 import loginRedirect from './middleware/loginRedirect.jsx';
 
 
-import injectTapEventPlugin from 'react-tap-event-plugin';
+import "./touchtap.jsx";
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 
-injectTapEventPlugin();
+
 
 const muiTheme = getMuiTheme();
 
 const middlewares = [thunk, loginRedirect];
 
 if (process.env.NODE_ENV !== `production`) {
+  if (module.hot) {
+    module.hot.accept('./reducers/index.jsx', () => {
+      const nextRootReducer = require('./reducers/index.jsx');
+      store.replaceReducer(nextRootReducer);
+    });
+  }
   const createLogger = require(`redux-logger`);
   const logger = createLogger();
   middlewares.push(logger);
 }
+
+
 
 const store = compose(applyMiddleware(...middlewares))(createStore)(reducers)
 

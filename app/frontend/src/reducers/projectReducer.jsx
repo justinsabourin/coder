@@ -7,7 +7,7 @@ const reducer = function(state={
             return {...state, loading: true}
         case 'GET_PROJECT_FULFILLED':
             const metadata = {...state.metadata, creator: action.payload.creator, project_name: action.payload.project_name};
-            return {...state, loading: false, directoryTree: action.payload.files, metadata}    
+            return {...state, loading: false, metadata}    
     }
     return state;
 }
