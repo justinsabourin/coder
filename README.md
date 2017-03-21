@@ -26,7 +26,7 @@ npm install --production
 NODE_ENV="production" npm start
 ```
 
-```
+
 # Team Members
 
 Justin Sabourin
