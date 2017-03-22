@@ -34,7 +34,6 @@ COPY ./app /home/server/app
 WORKDIR /home/server/app
 RUN npm install --production
 
-
 EXPOSE 8080
 
 CMD service memcached start && mongod --fork --logpath '/home/server/logs/mongo.log' && npm start
