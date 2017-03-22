@@ -1,23 +1,28 @@
 var router = require('express').Router();
 var File = require('../../model/File');
 var normalizePath = require('../../middleware').normalizePath;
+var git = require('../../git');
 
 const CONTENT_TYPE = {
     'html': 'text/html',
     'css': 'text/css',
-    'javascript': 'application/javascript'
+    'js': 'application/javascript'
 };
 
 
 router.get('/user/:username/projects/:project/*', normalizePath, function(req, res, next) {
     var path = req.params.path === '/' ? '/index.html' : req.params.path;
-    File.findOne({ project_name: req.params.project, creator: req.params.username, path, node_type: 'F'}, (err, file) => {
-        if (err || !file) return next(err);
-        var type = CONTENT_TYPE[file.file_type];
-        if (!type) return next('Bad type');
-        res.set('Content-Type', type);
-        res.end(file.contents);
-    });
+    var fileType = path.split('.').slice(-1)[0];
+    if (!['html', 'js', 'css'].includes(fileType)) {
+        return next('Can not retrieve directories');
+    }
+    git.getFile(req.params.username, req.params.project, path)
+        .then((file) => {
+            var type = CONTENT_TYPE[fileType];
+            res.set('Content-Type', type);
+            res.end(file.contents);
+        })
+        .catch(next);
 });
 
 router.use((err, req, res, next) => {

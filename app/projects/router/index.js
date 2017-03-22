@@ -44,36 +44,49 @@ router.put('/user/:username/projects/:project/*', normalizePath, validateFile, f
         if (!project) return next({status: 404, message: 'Project doesnt exist'});
         project.addFile(req.params.path, req.body.contents || "", req.body, function(err, newFile) {
             if (err) return next({status: 500, message: err.message });
-            res.json(newFile.rest());
+            res.json(newFile);
         });
     });
-
-
-    
 });
 
 // update file for project
 router.patch('/user/:username/projects/:project/*', normalizePath, function(req, res, next) {
-    Project.updateFile(req.params.project, req.params.username, req.params.path, req.body.contents, function(err, updatedFile) {
-        if (err) return next({ status: 500, message: err.message });
-        res.json(updatedFile.rest());
+    var fileType = req.params.path.split('.').slice(-1)[0];
+    if (!['html', 'js', 'css'].includes(fileType)) {
+        return next({status: 400, message: 'Cannot update a directory'});
+    }
+    Project.findOne( { creator: req.params.username, project_name: req.params.project }, (err, project) => {
+        if (err) return next({status: 500, message: err.message});
+        if (!project) return next({status: 404, message: 'Project doesnt exist'});
+        project.updateFile(req.params.path, req.body.contents, function(err, updatedFile) {
+            if (err) return next({ status: 500, message: err.message });
+            res.json(updatedFile);
+        });
     });
 });
 
 // Read file for project
 router.get('/user/:username/projects/:project/*', normalizePath, function(req, res, next) {
-    Project.getFile(req.params.project, req.params.username, req.params.path, function(err, file) {
-        if (err) return next({ status: 500, message: err.message });
-        if (!file) return next({ status: 404, message: "File doesnt exist" });
-        res.json(file.rest());
+    Project.findOne( { creator: req.params.username, project_name: req.params.project }, (err, project) => {
+        if (err) return next({status: 500, message: err.message});
+        if (!project) return next({status: 404, message: 'Project doesnt exist'});
+        project.getFile(req.params.path, function(err, file) {
+            if (err) return next({ status: 500, message: err.message });
+            if (!file) return next({ status: 404, message: "File doesnt exist" });
+            res.json(file);
+        });
     });
 });
 
 // Delete file for project
 router.delete('/user/:username/projects/:project/*', normalizePath, function(req, res, next) {
-    Project.deleteFile(req.params.project, req.params.username, req.params.path, function(err) {
-        if (err) return next({ tatus: 500, message: err.message });
-        res.end();
+    Project.findOne( { creator: req.params.username, project_name: req.params.project }, (err, project) => {
+        if (err) return next({status: 500, message: err.message});
+        if (!project) return next({status: 404, message: 'Project doesnt exist'});
+        project.deleteFile(req.params.path, function(err) {
+            if (err) return next({ status: 500, message: err.message });
+            res.end();
+        });
     });
 });
 

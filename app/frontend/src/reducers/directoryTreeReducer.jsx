@@ -21,7 +21,7 @@ const reducer = function(state={
             if (parent) {
                 newState.tree[path] = {
                     ...parent,
-                    children: parent.children.concat(action.payload.path)
+                    children: (parent.children && parent.children.concat(action.payload.path)) || [action.payload.path]
                 } 
             }
             return newState;

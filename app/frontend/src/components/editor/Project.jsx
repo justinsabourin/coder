@@ -37,7 +37,7 @@ class Project extends React.Component {
             <AppBar
                 title={this.props.metadata.project_name}
                 titleStyle={{fontFamily: 'Indie Flower', fontSize: '2.4em'}}
-                iconElementLeft={<IconButton containerElement={<Link to='/'/>} iconStyle={{color: 'white', marginBottom: 35}} iconClassName="fa fa-arrow-left"></IconButton>}>
+                iconElementLeft={<IconButton containerElement={<Link to='/'/>}  iconClassName="fa fa-arrow-left"></IconButton>}>
 
                 <IconMenu
                     iconButtonElement={<IconButton iconClassName="fa fa-eye" iconStyle={iconStyles} />}

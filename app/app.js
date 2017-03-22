@@ -1,5 +1,6 @@
 var express = require('express');
 var app = express();
+var fsp = require('fs-promise');
 var bodyParser = require('body-parser');
 var session = require('express-session');
 var MemcachedStore = require('connect-memcached')(session);
@@ -13,6 +14,7 @@ var projectsRouter = require('./projects/router');
 
 var middleware = require('./middleware');
 var passport = require('./authenticate/passport');
+var config = require(process.env.NODE_ENV === 'production' ? './config.js' : './config.dev.js');
 
 
 // connect to mongodb
@@ -21,6 +23,8 @@ mongoose.connect('mongodb://localhost/webeditor', function(err) {
     console.error('Unable to connect to mongoDB: ', err);
   }
 });
+
+fsp.ensureDir(config.repoPath);
 
 
 app.use(bodyParser.urlencoded({ extended: false }));
