@@ -97,11 +97,10 @@ if (require.main === module) {
     } else {
         var fs = require('fs');
         var https = require('https');
-        var privateKey = fs.readFileSync( 'server.key' );
-        var certificate = fs.readFileSync( 'server.crt' );
         var config = {
-                key: privateKey,
-                cert: certificate
+                ca: fs.readFileSync('webeditor_me/webeditor_me.ca-bundle'),
+                key: fs.readFileSync('webeditor_me/webeditor_me.key'),
+                cert: fs.readFileSync('webeditor_me/webeditor_me.crt')
         };
         https.createServer(config, app).listen(8082, function(){
             console.log('App running HTTPS on port 8082');
