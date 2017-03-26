@@ -111,7 +111,7 @@ if (require.main === module) {
         // Taken from http://stackoverflow.com/questions/7450940/automatic-https-connection-redirect-with-node-js-express
         var http = require('http');
         http.createServer(function (req, res) {
-            res.writeHead(301, { "Location": + req.headers.host + req.url });
+            res.writeHead(301, { "Location": + config.host + req.url });
             res.end();
         }).listen(8080);
     }
