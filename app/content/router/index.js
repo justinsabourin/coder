@@ -10,7 +10,7 @@ const CONTENT_TYPE = {
 };
 
 
-router.get('/user/:username/projects/:project/*', normalizePath, function(req, res, next) {
+router.get('/users/:username/projects/:project/*', normalizePath, function(req, res, next) {
     var path = req.params.path === '/' ? '/index.html' : req.params.path;
     var fileType = path.split('.').slice(-1)[0];
     if (!['html', 'js', 'css'].includes(fileType)) {

@@ -2,19 +2,22 @@ process.noDeprecation = true;
 var webpack = require('webpack');
 module.exports = {
    entry: [ 
-       'webpack-hot-middleware/client', 
-        __dirname + '/frontend/src/index.jsx'
+        __dirname + '/frontend/src/index.jsx',
+        'webpack/hot/only-dev-server',
+        'webpack-dev-server/client?http://localhost:8081'
     ],
 	
    output: {
       path: __dirname + '/frontend/public/js/',
       filename: 'bundle.js',
-      publicPath: 'https://localhost:8080/js/'
+      publicPath: 'http://localhost:8081/js/'
    },
+
+    devtool: 'inline-source-map',
 
     plugins: [
         new webpack.HotModuleReplacementPlugin(),
-        new webpack.NoEmitOnErrorsPlugin()
+        new webpack.NamedModulesPlugin(),
     ],
 
     module: {
@@ -25,9 +28,15 @@ module.exports = {
                 loader: 'babel-loader',
                     
                 query: {
-                presets: ['es2015', 'react', 'stage-2']
+                presets: ['es2015', 'react', 'stage-2', 'react-hmre']
                 }
-            }
+            },{
+                test: /\.css$/,
+                use: [
+                    'style-loader',
+                    'css-loader?modules',
+                ],
+            },
         ]
     }
 };

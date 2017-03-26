@@ -25,7 +25,7 @@ projectSchema.pre('save', function(next) {
     if (this.isNew) {
         git.initProject(this.creator, this.project_name)
             .then(() => next())
-            .catch((err) => next({status: 500,  message: "Error creating project"}));
+            .catch((err) => next(err));
     } else {
         next();
     }
@@ -41,66 +41,85 @@ projectSchema.methods.rest = function(){
 };
 
 
-projectSchema.methods.getFlattenedTree = function(cb) {
-    git.getDirectoryTree(this.creator, this.project_name)
-        .then((tree) => {
-            var project = {
+projectSchema.methods.getFlattenedTree = function(status, cb) {
+     var project = {
                 creator: this.creator,
                 project_name: this.project_name,
-                files: tree
             };
-            return cb(null, project);
+    git.getDirectoryTree(this.creator, this.project_name)
+        .then((tree) => {
+            project.files = tree;
+            
+            return !status ? cb(null, project) :
+                git.status(this.creator, this.project_name)
+                    .then(statuses => {
+                        project.status = statuses;
+                        return cb(null, project);
+                    });
 
         })
         .catch(cb);
 };
 
-projectSchema.methods.addFile = function(filePath, fileContents, file, cb) {
+projectSchema.methods.addFile = function(filePath, fileContents, file, status, cb) {
+    var result = {
+        project_name: this.project_name,
+        creator: this.creator,
+        name: filePath.split('/').slice(-1)[0],
+        path: filePath,
+        node_type: file.type,
+        file_type: file.file_type,
+        contents: file.file_type === 'F' ? fileContents : undefined,
+    };
     git.createFile(this.creator, this.project_name, {
         path: filePath,
         type: file.type,
         contents: fileContents
     })
     .then(() => {
-        cb(null, {
-            project_name: this.project_name,
-            creator: this.creator,
-            name: filePath.split('/').slice(-1)[0],
-            path: filePath,
-            node_type: file.type,
-            file_type: file.file_type,
-            contents: file.file_type === 'F' ? fileContents : undefined,
-        });   
+        return !status ? cb(null, result) :
+            git.status(this.creator, this.project_name)
+                .then(statuses => {
+                    result.status = statuses;
+                    return cb(null, result);
+                });   
     })
-    .catch((err) => cb(err));
+    .catch(cb);
 };
 
-projectSchema.methods.updateFile = function(filePath, fileContents, cb) {
+projectSchema.methods.updateFile = function(filePath, fileContents, status, cb) {
+    var fileType = filePath.split('.').slice(-1)[0];
+    var result = {
+        project_name: this.project_name,
+        creator: this.creator,
+        name: filePath.split('/').slice(-1)[0],
+        path: filePath,
+        node_type: 'f',
+        file_type: fileType === 'js' ? 'javascript' : fileType,
+        contents: fileContents,
+    };
+    
     git.createFile(this.creator, this.project_name, {
         path: filePath,
         type: 'F',
         contents: fileContents
     })
     .then(() => {
-        var fileType = filePath.split('.').slice(-1)[0];
-        cb(null, {
-            project_name: this.project_name,
-            creator: this.creator,
-            name: filePath.split('/').slice(-1)[0],
-            path: filePath,
-            node_type: 'f',
-            file_type: fileType === 'js' ? 'javascript' : fileType,
-            contents: fileContents,
-        });   
+        return !status ? cb(null, result) :
+            git.status(this.creator, this.project_name)
+                .then(statuses => {
+                    result.status = statuses;
+                    return cb(null, result);
+                });   
     })
-    .catch((err) => cb(err));
+    .catch(cb);
 };
 
 projectSchema.methods.getFile = function(filePath, cb) {
     git.getFile(this.creator, this.project_name, filePath)
         .then((data) => {
             var fileType = data.type === 'F' ? filePath.split('.').slice(-1)[0]:  undefined;
-            fileType = fileType && (fileType === 'js' ? 'javascript' : fileType)
+            fileType = fileType && (fileType === 'js' ? 'javascript' : fileType);
             cb(null, {
                 project_name: this.project_name,
                 creator: this.creator,
@@ -111,12 +130,38 @@ projectSchema.methods.getFile = function(filePath, cb) {
                 contents: data.contents
             });
         })
-        .catch(err => cb(err)); 
+        .catch(cb); 
 };
 
-projectSchema.methods.deleteFile = function(filePath, cb) {
+projectSchema.methods.deleteFile = function(filePath, status, cb) {
     git.deleteFile(this.creator, this.project_name, filePath)
-        .then(() => cb(null))
+        .then(() => 
+            !status ? cb(null) : 
+                git.status(this.creator, this.project_name)
+                    .then(statuses => cb(null, {status: statuses}))
+        )
+        .catch(cb);
+};
+
+projectSchema.methods.getStatus = function(cb) {
+    git.status(this.creator, this.project_name)
+        .then(statuses => {
+            cb(null, statuses);
+        })
+        .catch(cb);
+};
+
+projectSchema.methods.commitFiles = function(files, message, status, cb) {
+    var filesToUpdate = files.reduce((accum, file) => {
+        if (file.type === 'DELETED') accum.toDelete.push(file.path);
+        else accum.toCommit.push(file.path);
+        return accum;
+    }, {toDelete: [], toCommit: []});
+    git.commit(this.creator, this.project_name, filesToUpdate.toDelete, filesToUpdate.toCommit, message)
+        .then(() =>  
+        !status ? cb(null, {commit: 'success'}) : 
+                git.status(this.creator, this.project_name)
+                    .then(statuses => cb(null, {commit: 'success', status: statuses})))
         .catch(cb);
 };
 

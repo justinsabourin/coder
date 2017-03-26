@@ -23,6 +23,11 @@ body {
 
 }
 
+.error-marker {
+    background-color: red;
+    color: yellow;
+}
+
 
 .icon:disabled {
     color: gray;

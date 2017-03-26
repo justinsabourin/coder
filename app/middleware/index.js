@@ -25,7 +25,6 @@ module.exports.normalizePath = function(req, res, next) {
 
 module.exports.validateFile = function(req, res, next) {
     var fileName = req.params.path.slice(req.params.path.lastIndexOf('/') + 1);
-    var message;
     if (req.body.type === 'F') {
         match = /^[a-zA-Z0-9]+.(html|js|css)$/g.exec(fileName);
         if (!match || !match[1]) {
@@ -41,4 +40,25 @@ module.exports.validateFile = function(req, res, next) {
         return next({status: 400, message: "Unrecognized type"});
     }
     next();
+};
+
+module.exports.validatePath = function(req, res, next) {
+    if (/^(\/[a-zA-Z0-9]+)+(\.(html|js|css))?$/.test(req.params.path)) {
+        return next();
+    }
+    return next({status: 400, message: 'Invalid path. Directories must be alphanumberic and files must be alphanumeric and end in .html, .css or .js'});
+};
+
+module.exports.validateCommit = function(req, res, next) {
+    if (!req.body.files || req.body.files.constructor !== Array || req.body.files.length == 0) {
+        return next({status: 400, message: 'Files must be a non empty array'});
+    } else if (!req.body.message || typeof req.body.message !== 'string' || req.body.message.length === 0) {
+        return next({status: 400, message: 'Commit message must be a non empty string'});
+    } else {
+        var error = req.body.files.find(file => !file.path || !file.type);
+        if (error){
+            return next({status: 400, message: 'Files are malformed. Must contain a path and type'});
+        }
+        next();
+    }
 };

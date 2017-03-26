@@ -3,6 +3,8 @@ const reducer = function(state={
     open: []
 }, action) {
     switch(action.type) {
+        case 'GET_PROJECT_FULFILLED':
+            return {active: null, open: []}
         case 'OPEN_FILE_FULFILLED':
             return {
                 ...state,
@@ -12,7 +14,7 @@ const reducer = function(state={
         case 'DELETE_FILE_FULFILLED':
             var index = state.open.findIndex((file) => {
                 if (file.node_type !== 'F') return false; 
-                else return file.path === action.payload
+                else return file.path === action.payload.path
             });
             if (index === -1) {
                 return state;

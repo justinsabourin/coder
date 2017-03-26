@@ -53,33 +53,38 @@ app.use(function (err, req, res, next) {
         else   
             res.status(err.status).end(err.message);
     } else {
+        console.log(err);
         return next(err);
     }
 });
 
 
-var frontendRouter = require('./frontend');
+
 if (process.env.NODE_ENV !== 'production')  {
-    var webpackDevMiddleware = require("webpack-dev-middleware");
+    var WebpackDevServer = require('webpack-dev-server');
     var webpack = require("webpack");
     var webpackConfig = require("./webpack.dev.config.js");
     var compiler = webpack(webpackConfig);
-    app.use(webpackDevMiddleware(compiler, {
+    var server = new WebpackDevServer(compiler, {
+        port: 8081,
+        hot: true,
+        contentBase: __dirname + '/frontend/public',
+        quiet: false,
+        noInfo: false,
         publicPath: "/js/",
-        index: __dirname + '/frontend/public/index.html',
-        stats: {
-            colors: true,
-        },
-        hot: true
-    }));
-    app.use(require("webpack-hot-middleware")(compiler, {
-        log: console.log,
-        path: '/__webpack_hmr',
-    })); 
+        historyApiFallback: true,
+        stats: { colors: true }
+    });
+    var proxy = require('http-proxy-middleware');
+    var url = require('url');
+    app.use('/*', proxy({ target: 'http://localhost:8081' }));
+    server.listen(8081, "localhost", function() {
+        console.log('WebpackDevServer started');
+    });
+} else {
+    var frontendRouter = require('./frontend');
+    app.use(frontendRouter);
 }
-
-app.use(frontendRouter);
-
 
 
 module.exports = app;
