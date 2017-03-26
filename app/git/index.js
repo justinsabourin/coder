@@ -167,9 +167,6 @@ git.commit = function(username, project, deletedFiles, changedFiles, message) {
 
     var repo, index, oid, deletedPaths;
 
-    console.log(deletedFiles);
-    console.log(changedFiles);
-
     var start = fsp.exists(repoPath)
         .then(() => NodeGit.Repository.open(repoPath))
         .then(repoResult => {
@@ -225,7 +222,7 @@ git.commit = function(username, project, deletedFiles, changedFiles, message) {
             var committer = author;
             return repo.createCommit('HEAD', author, committer, message, oid, [parent]);
         })
-        .catch((err) => {console.log(err); return Promise.reject(err.status ? err :{status: 500, message: 'Unable to commit files at this time'});});
+        .catch((err) => Promise.reject(err.status ? err :{status: 500, message: 'Unable to commit files at this time'}));
 };
 
 git.commitDelete = function(username, project, files) {
@@ -297,7 +294,6 @@ git.status = function(username, project) {
             }, {});
         })
         .catch(err => {
-            console.log(err);
             return err.status ? err : Promise.reject({status: 500, message: 'Unable to get project status at this time'});
         });
 };
