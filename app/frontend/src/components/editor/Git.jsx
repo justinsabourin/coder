@@ -31,9 +31,9 @@ class Git extends React.Component {
                             <Tab
                             icon={<FontIcon className="fa fa-git" />}
                             />
-                            <Tab
+                            {/*<Tab
                             icon={<FontIcon className="fa fa-github" />}
-                            />
+                            />*/}
                         </Tabs>}>
                         
                     </AppBar>

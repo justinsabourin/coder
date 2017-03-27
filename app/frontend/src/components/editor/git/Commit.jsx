@@ -113,12 +113,13 @@ class Commit extends React.Component {
                         {this.props.status.map((row, index) => (
                         <TableRow style={{height: 30, backgroundColor: rowColor[row.type]}} key={index} selected={false}>
                             <TableRowColumn style={{fontWeight: 500, paddingLeft: 0}}>
-                                {row.type === 'MODIFIED' ? 
+                                {row.path.length <= 46 ? row.path : row.path.slice(0,22) + '...' + row.path.slice(-21)}
+                                {/*{row.type === 'MODIFIED' ? 
                                     (row.path.length <= 42 ? row.path : row.path.slice(0,20) + '...' + row.path.slice(-19))
                                     : (row.path.length <= 46 ? row.path : row.path.slice(0,22) + '...' + row.path.slice(-21) )}
                                 
                                 {row.type === 'MODIFIED' &&
-                                <FlatButton onClick={e => e.stopPropagation()} backgroundColor="#edeeef" labelStyle={{fontSize: 12, paddingLeft: 10, paddingRight: 10, color: '#e89043'}} style={{lineHeight: 'normal', minWidth: 30, height: 20, marginLeft: 6}} label="DIFF" />}
+                                <FlatButton onClick={e => e.stopPropagation()} backgroundColor="#edeeef" labelStyle={{fontSize: 12, paddingLeft: 10, paddingRight: 10, color: '#e89043'}} style={{lineHeight: 'normal', minWidth: 30, height: 20, marginLeft: 6}} label="DIFF" />}*/}
                             </TableRowColumn>
                             <TableRowColumn style={{height: 30, paddingLeft: 0, marginLeft: 24,  width: '80px'}}>
                                 <Chip backgroundColor={chipColor[row.type]} labelStyle={{...chipStyle[row.type],fontSize: 11, lineHeight: '25px', paddingLeft: 8, paddingRight: 8}}>
