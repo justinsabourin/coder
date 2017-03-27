@@ -36,7 +36,7 @@ app.use(session({
         hosts: [config.memcachedURL],
     }),
     saveUninitialized: true,
-    cookie: {httpOnly: true, sameSite: true, secure: true}
+    cookie: {httpOnly: true, sameSite: true, secure: process.env.NODE_ENV === 'production'}
 }));
 app.use(passport.initialize());
 app.use(passport.session());

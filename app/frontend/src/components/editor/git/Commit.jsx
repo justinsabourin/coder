@@ -78,7 +78,7 @@ class Commit extends React.Component {
         const disableCommit = !this.props.status.reduce((accum, stat) => accum || stat.selected, false);
 
         return <div style={this.props.style}>
-            <Paper style={{width: '100%', display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-start'}} zDepth={2}> 
+            <Paper style={{width: '100%', display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-start', padding: '10px 0'}} zDepth={2}> 
                 <RaisedButton onClick={this.onCommit.bind(this)} disabled={disableCommit} style={{margin: 10}} label="Commit" primary={true}/>
                 <TextField
                     onChange={(e) => this.setState({message: e.target.value})}
