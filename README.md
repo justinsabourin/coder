@@ -2,7 +2,7 @@
 
 The application can be accessed here: [https://webeditor.me](https://webeditor.me)
 
-[Credits](https://webeditor.me)
+[Credits](https://webeditor.me/credits.html)
 
 # Running the application with docker [only works in deployment]
 
