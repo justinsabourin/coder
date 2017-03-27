@@ -8,27 +8,29 @@ const reducer = function(state={
         case 'GET_PROJECT_FULFILLED':
             return {...state, tree: action.payload.files}
         case 'ADD_FILE_FULFILLED':
-            var path = action.payload.path.slice(0, action.payload.path.lastIndexOf('/'));
+            var file = {...action.payload};
+            file.status && delete file.status;
+            var path = file.path.slice(0, file.path.lastIndexOf('/'));
             var parent = state.tree[path];
             var newState = {
                     ...state,
                     newFile: {},
                     tree: {
                         ...state.tree,
-                        [action.payload.path]: action.payload
+                        [file.path]: file
                     }
             }
             if (parent) {
                 newState.tree[path] = {
                     ...parent,
-                    children: parent.children.concat(action.payload.path)
+                    children: (parent.children && parent.children.concat(action.payload.path)) || [action.payload.path]
                 } 
             }
             return newState;
         case 'DELETE_FILE_FULFILLED':
             var tree = {...state.tree}
-            delete tree[action.payload]
-            var path = action.payload.slice(0, action.payload.lastIndexOf('/'));
+            delete tree[action.payload.path]
+            var path = action.payload.path.slice(0, action.payload.path.lastIndexOf('/'));
             var parent = state.tree[path];
             var newState = {
                     ...state,
@@ -38,7 +40,7 @@ const reducer = function(state={
             if (parent) {
                 newState.tree[path] = {
                     ...parent,
-                    children: parent.children.filter((file) => file !== action.payload)
+                    children: parent.children.filter((file) => file !== action.payload.path)
                 } 
             }
             return newState;
@@ -82,6 +84,8 @@ const reducer = function(state={
             }
         case 'TOGGLE_DIRECTORY_VIEW':
             return {...state, open: !state.open}
+        // case 'TOGGLE_GIT_VIEW':
+        //     return {...state, open: false}
 
     }
     return state;

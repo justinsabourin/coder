@@ -1,16 +1,18 @@
 # An Online Web Editor
 
-# Running the application with docker
+The application can be accessed here: [https://webeditor.me](https://webeditor.me)
+
+# Running the application with docker [only works in deployment]
 
 ```
-docker build -t teamunknown .
-docker run -p 8080:8080 --name site_container -d teamunknown
+mv docker-compose.yaml.old docker-compose.yaml
+docker-compose up
 ```
-
-Then go to [https://localhost:8080]()
 
 # Running the application locally
 Install [MongoDB](https://docs.mongodb.com/getting-started/shell/installation/) and [Memcached](https://memcached.org/downloads).
+
+Open `app/config.dev.js` and change repoPath to `<ABSOLUTE PATH TO GIT REPO>/repositories`
 
 ## Run development
 ```
@@ -19,12 +21,7 @@ npm install
 npm start
 ```
 
-## Run production
-```
-cd app
-npm install --production
-NODE_ENV="production" npm start
-```
+Then it should be running at[http://localhost:8080](http://localhost:8080)
 
 
 # Team Members

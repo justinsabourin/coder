@@ -16,7 +16,7 @@ export const getProjectError = (payload) => {
 export const getProject = (name) => (dispatch, getState) => {
     dispatch(getProjectStart());
     var state = getState();
-    return axios.get('/api/projects/user/' + state.user.username+ '/projects/' + name)
+    return axios.get('/api/projects/users/' + state.user.username+ '/projects/' + name + '?status=true')
     .then(response => dispatch(getProjectFulfilled(response.data)))
     .catch(error => dispatch(getProjectError(error.response)));
 };

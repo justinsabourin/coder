@@ -32,7 +32,7 @@ export const openFile = (path) => (dispatch, getState) => {
             switchTab(index);
             return;
         }
-    return axios.get(`/api/projects/user/${creator}/projects/${project_name}${path}`)
+    return axios.get(`/api/projects/users/${creator}/projects/${project_name}/path/${path}`)
     .then(response => dispatch(openFileFulfilled(response.data)))
     .catch(error => dispatch(openFileError(error.response)));
 };
@@ -56,7 +56,7 @@ export const saveFile = () => (dispatch, getState) => {
     var { path, contents } = state.files.open[state.files.active];
     dispatch(saveFileStart());
 
-    return axios.patch(`/api/projects/user/${creator}/projects/${project_name}${path}`, {contents})
+    return axios.patch(`/api/projects/users/${creator}/projects/${project_name}/path/${path}?status=true`, {contents})
     .then(response => dispatch(saveFileFulfilled(response.data)))
     .catch(error => dispatch(saveFileError(error.response)));
 };
@@ -65,7 +65,7 @@ export const saveFile = () => (dispatch, getState) => {
 export const viewProjectNewTab = () => (dispatch, getState) => {
     var state = getState();
     var { creator, project_name } = state.project.metadata;
-    window.open(`/staticcontent/user/${creator}/projects/${project_name}/`, '_blank');
+    window.open(`/staticcontent/users/${creator}/projects/${project_name}/`, '_blank');
 }
 
 export const viewProjectinEditor = () => (dispatch, getState) => {
@@ -74,7 +74,7 @@ export const viewProjectinEditor = () => (dispatch, getState) => {
     dispatch({
         type: 'OPEN_FILE_FULFILLED', 
         payload: {
-            path: `/staticcontent/user/${creator}/projects/${project_name}/`,
+            path: `/staticcontent/users/${creator}/projects/${project_name}/`,
             node_type: 'IFR',
             name: 'Preview'
         }

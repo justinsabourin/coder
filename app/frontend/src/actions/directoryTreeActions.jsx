@@ -21,7 +21,7 @@ export const addFile = (path) => (dispatch, getState) => {
     var state = getState();
     var { creator, project_name } = state.project.metadata;
     var type = state.directoryTree.newFile.type
-    return axios.put(`/api/projects/user/${creator}/projects/${project_name}${path}`, {type})
+    return axios.put(`/api/projects/users/${creator}/projects/${project_name}/path/${path}?status=true`, {type})
     .then(response => dispatch(addFileFulfilled(response.data)))
     .catch(error => dispatch(addFileError(error.response)));
 };
@@ -38,7 +38,7 @@ export const deleteFile = () => (dispatch, getState) => {
     var state = getState();
     var { creator, project_name } = state.project.metadata;
     var path = state.directoryTree.selected.path;
-    return axios.delete(`/api/projects/user/${creator}/projects/${project_name}${path}`)
-    .then(response => dispatch(deleteFileFulfilled(path)))
+    return axios.delete(`/api/projects/users/${creator}/projects/${project_name}/path/${path}?status=true`)
+    .then(response => dispatch(deleteFileFulfilled({...response.data, path})))
     .catch(error => dispatch(deleteFileError(error.response)));
 };

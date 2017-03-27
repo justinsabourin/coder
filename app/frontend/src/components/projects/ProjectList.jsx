@@ -18,7 +18,7 @@ const ProjectList = (props) => {
                 subtitle={<span style={{color: 'black', fontFamily: 'Indie Flower', fontSize: '1.2em'}}>by <b>{project.creator}</b></span>}
                 actionIcon={<IconButton containerElement={<Link to={'/' + project.project_name}/>} iconStyle={{color: 'black'}} iconClassName="fa fa-code"></IconButton>}
                 >
-                <iframe style={{height: '100%', width: '100%', overflow: 'hidden'}} sandbox="allow-scripts allow-same-origin" scrolling="no" src={`/staticcontent/user/${project.creator}/projects/${project.project_name}/`} frameBorder="0"></iframe>
+                <iframe style={{height: '100%', width: '100%', overflow: 'hidden'}} sandbox="allow-scripts allow-same-origin" scrolling="no" src={`/staticcontent/users/${project.creator}/projects/${project.project_name}/`} frameBorder="0"></iframe>
                 </GridTile>
             ))}
         </GridList>

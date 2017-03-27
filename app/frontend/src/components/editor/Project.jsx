@@ -5,9 +5,11 @@ import { Link } from 'react-router';
 import { getProject } from '../../actions/projectActions.jsx';
 import { saveFile, viewProjectNewTab, viewProjectinEditor } from '../../actions/filesActions.jsx';
 import { toggleDirectoryView } from '../../actions/directoryTreeActions.jsx';
+import { toggleGitView } from '../../actions/gitActions.jsx';
 
 import Loader from '../shared/Loader.jsx';
-import DirectoryTree from './DirectoryTree.jsx'
+import DirectoryTree from './DirectoryTree.jsx';
+import Git from './Git.jsx';
 
 
 import Editor from './Editor.jsx';
@@ -31,13 +33,13 @@ class Project extends React.Component {
         if (this.props.isLoading) return <Loader />
 
         const iconStyles = {color: 'white', marginTop: 8};
-        const iconPush = this.props.directoryViewOpen ? {margin: '0 230px 0 0'} : {};
+        const iconPush = {margin: '0 280px 0 0'};
 
         return <div>
             <AppBar
                 title={this.props.metadata.project_name}
                 titleStyle={{fontFamily: 'Indie Flower', fontSize: '2.4em'}}
-                iconElementLeft={<IconButton containerElement={<Link to='/'/>} iconStyle={{color: 'white', marginBottom: 35}} iconClassName="fa fa-arrow-left"></IconButton>}>
+                iconElementLeft={<IconButton containerElement={<Link to='/'/>}  iconClassName="fa fa-arrow-left"></IconButton>}>
 
                 <IconMenu
                     iconButtonElement={<IconButton iconClassName="fa fa-eye" iconStyle={iconStyles} />}
@@ -47,11 +49,14 @@ class Project extends React.Component {
                 </IconMenu>
 
                 
-                <IconButton disabled={!this.props.canSave} onTouchTap={this.props.saveFile} style={iconPush} iconClassName="fa fa-floppy-o" iconStyle={{...iconStyles, color: !this.props.canSave ? 'gray' : 'white'}} />
-                <IconButton onTouchTap={this.props.toggleDirectoryView} iconClassName="fa fa-folder" iconStyle={iconStyles} />
+                <IconButton disabled={!this.props.canSave} style={this.props.gitViewOpen && this.props.directoryViewOpen ? iconPush : {}} onTouchTap={this.props.saveFile} iconClassName="fa fa-floppy-o" iconStyle={{...iconStyles, color: !this.props.canSave ? 'gray' : 'white'}} />
+                {!this.props.gitViewOpen && <IconButton style={this.props.directoryViewOpen ? iconPush : {}} onTouchTap={this.props.toggleGitView} iconClassName="fa fa-git" iconStyle={iconStyles} /> }
+                {!this.props.directoryViewOpen && <IconButton onTouchTap={this.props.toggleDirectoryView} iconClassName="fa fa-folder" iconStyle={iconStyles} /> }
             </AppBar>
             <DirectoryTree open={this.props.directoryViewOpen} 
                            onClose={this.props.toggleDirectoryView}/>
+            <Git open={this.props.gitViewOpen} 
+                 onClose={this.props.toggleGitView} />
                            
             <Editor />
         </div>
@@ -64,7 +69,8 @@ const mapStateToProps = (state) => {
     metadata: state.project.metadata,
     isLoading: state.project.loading,
     canSave: state.files.open.length > 0 && state.files.open[state.files.active].dirty,
-    directoryViewOpen: state.directoryTree.open
+    directoryViewOpen: state.directoryTree.open,
+    gitViewOpen: state.git.open
   }
 }
 
@@ -84,6 +90,9 @@ const mapDispatchToProps = (dispatch) => {
         },
         toggleDirectoryView: () => {
             dispatch(toggleDirectoryView())
+        },
+        toggleGitView: () => {
+            dispatch(toggleGitView());
         }
 
     };

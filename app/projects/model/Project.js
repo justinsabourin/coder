@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var File = require('../../model/File');
+var git = require('../../git');
 
 
 
@@ -20,52 +21,16 @@ projectSchema.index({creator: 1, project_name: -1}, {unique: true});
 
 
 projectSchema.pre('save', function(next) {
-    // have to break indentation, TODO: look for workaround
-    const welcomeMessage = 
-`<html>
-    <head>
-        <title>${this.creator}</title>
-        <style>
-            body {
-                background-color: #efffff;
-            }
-            
-            .container {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 100vw;
-                height: 90vh;
-            }
-            
-            .text {
-                font-size: 5em;
-                color: black;
-                font-family: serif;
-            }
-            
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <span class="text">
-                ${this.project_name}
-            </span>
-        </div>
-    </body>
-</html>`;
 
-    var newFile = new File({
-        project_name: this.project_name,
-        creator: this.creator,
-        name: 'index.html',
-        path: '/index.html',
-        node_type: 'F',
-        file_type: 'html',
-        contents: welcomeMessage,
-    });
-
-    newFile.save(next);
+    if (this.isNew) {
+        git.initProject(this.creator, this.project_name)
+            .then(() => next())
+            .catch((err) => next(err));
+    } else {
+        next();
+    }
+    
+    
 });
 
 projectSchema.methods.rest = function(){
@@ -75,105 +40,129 @@ projectSchema.methods.rest = function(){
     };
 };
 
-projectSchema.methods.getTreeStructure = function(cb) {
-    File.find({ project_name: this.project_name, creator: this.creator}, 'name path node_type created_at updated_at', (err, nodes) => {
-        if (err) return cb(err);
-        var tree = nodes.reduce((accum, node) => {
-            
-            var path = node.path.split('/').slice(1);
-            var root = accum;
-            path.forEach((name) => {
-                if (!root.files)
-                    root.files = {};
-                if(!root.files[name])
-					root.files[name] = {name};
-				root = root.files[name];
-            });
-            root.name = node.name;
-            root.path = node.path;
-            root.node_type = node.node_type;
-            root.created_at = node.created_at;
-            root.updated_at = node.updated_at;
-            return accum;
-        }, {});
-        tree.project_name = this.project_name;
-        tree.creator = this.creator;
-        return cb(null, tree);
 
-    });
+projectSchema.methods.getFlattenedTree = function(status, cb) {
+     var project = {
+                creator: this.creator,
+                project_name: this.project_name,
+            };
+    git.getDirectoryTree(this.creator, this.project_name)
+        .then((tree) => {
+            project.files = tree;
+            
+            return !status ? cb(null, project) :
+                git.status(this.creator, this.project_name)
+                    .then(statuses => {
+                        project.status = statuses;
+                        return cb(null, project);
+                    });
+
+        })
+        .catch(cb);
 };
 
-projectSchema.methods.getFlattenedTree = function(cb) {
-    File.find({ project_name: this.project_name, creator: this.creator}, 'name path node_type file_type created_at updated_at')
-    .sort({'path.length' : 1})
-    .exec((err, nodes) => {
-        if (err) return cb(err);
-        
-        var tree = {};
-        tree.files = {};
-        nodes.forEach((node) => {
-            tree.files[node.path] = node.rest();
-            tree.files[node.path].children = [];
-            var parentPath = node.path.slice(0, node.path.lastIndexOf('/'));
-            if (parentPath === "") return;
-            tree.files[parentPath].children.push(node.path);
-        });
+projectSchema.methods.addFile = function(filePath, fileContents, file, status, cb) {
+    var result = {
+        project_name: this.project_name,
+        creator: this.creator,
+        name: filePath.split('/').slice(-1)[0],
+        path: filePath,
+        node_type: file.type,
+        file_type: file.file_type,
+        contents: file.file_type === 'F' ? fileContents : undefined,
+    };
+    git.createFile(this.creator, this.project_name, {
+        path: filePath,
+        type: file.type,
+        contents: fileContents
+    })
+    .then(() => {
+        return !status ? cb(null, result) :
+            git.status(this.creator, this.project_name)
+                .then(statuses => {
+                    result.status = statuses;
+                    return cb(null, result);
+                });   
+    })
+    .catch(cb);
+};
 
+projectSchema.methods.updateFile = function(filePath, fileContents, status, cb) {
+    var fileType = filePath.split('.').slice(-1)[0];
+    var result = {
+        project_name: this.project_name,
+        creator: this.creator,
+        name: filePath.split('/').slice(-1)[0],
+        path: filePath,
+        node_type: 'f',
+        file_type: fileType === 'js' ? 'javascript' : fileType,
+        contents: fileContents,
+    };
+    
+    git.createFile(this.creator, this.project_name, {
+        path: filePath,
+        type: 'F',
+        contents: fileContents
+    })
+    .then(() => {
+        return !status ? cb(null, result) :
+            git.status(this.creator, this.project_name)
+                .then(statuses => {
+                    result.status = statuses;
+                    return cb(null, result);
+                });   
+    })
+    .catch(cb);
+};
 
-        tree.project_name = this.project_name;
-        tree.creator = this.creator;
-        return cb(null, tree);
-
-    });
-}
-
-projectSchema.methods.addFile = function(filePath, fileContents, file, cb) {
-    var splitter = filePath.lastIndexOf('/');
-    var fileName = filePath.slice(splitter + 1);
-
-    const saveFile = () => {
-        var newFile = new File({
+projectSchema.methods.getFile = function(filePath, cb) {
+    git.getFile(this.creator, this.project_name, filePath)
+        .then((data) => {
+            var fileType = data.type === 'F' ? filePath.split('.').slice(-1)[0]:  undefined;
+            fileType = fileType && (fileType === 'js' ? 'javascript' : fileType);
+            cb(null, {
                 project_name: this.project_name,
                 creator: this.creator,
-                name: fileName,
+                name: filePath.split('/').slice(-1)[0],
                 path: filePath,
-                node_type: file.type,
-                file_type: file.file_type,
-                contents: fileContents,
-        });
-
-        newFile.save((err) => {
-            if (err) return cb(err);
-            cb(null, newFile);
-        });
-    };
-
-    if (splitter === 0) {
-        saveFile();
-    } else {
-        var path = filePath.slice(0, splitter);
-        File.findOne({ project_name: this.project_name, creator: this.creator, path: path }, "node_type", (err, file) => {
-            if (err) return cb(err);
-            if (!file) return cb({message: "Top-level directory does not exist"});
-            if (file.node_type !== 'D') return cb({message: "Can't create file inside another file"});
-            saveFile();
-        });
-    }
+                node_type: data.type,
+                file_type: fileType,
+                contents: data.contents
+            });
+        })
+        .catch(cb); 
 };
 
-projectSchema.statics.updateFile = function(projectName, creator, filePath, fileContents, cb) {
-    File.findOneAndUpdate({ project_name: projectName, creator: creator, path: filePath, node_type: 'F'}, 
-                          { $set: { contents: fileContents } },
-                          { new: true }, 
-                          cb);
+projectSchema.methods.deleteFile = function(filePath, status, cb) {
+    git.deleteFile(this.creator, this.project_name, filePath)
+        .then(() => 
+            !status ? cb(null) : 
+                git.status(this.creator, this.project_name)
+                    .then(statuses => cb(null, {status: statuses}))
+        )
+        .catch(cb);
 };
 
-projectSchema.statics.getFile = function(projectName, creator, filePath, cb) {
-    File.findOne({ project_name: projectName, creator: creator, path: filePath}, cb); 
+projectSchema.methods.getStatus = function(cb) {
+    git.status(this.creator, this.project_name)
+        .then(statuses => {
+            cb(null, statuses);
+        })
+        .catch(cb);
 };
 
-projectSchema.statics.deleteFile = function(projectName, creator, filePath, cb) {
-    File.remove({ project_name: projectName, creator: creator, path: new RegExp('^' + filePath +'(/[a-zA-Z0-9.]*)*$', 'g')}, cb); 
+projectSchema.methods.commitFiles = function(files, message, status, cb) {
+    var filesToUpdate = files.reduce((accum, file) => {
+        if (file.type === 'DELETED') accum.toDelete.push(file.path);
+        else accum.toCommit.push(file.path);
+        return accum;
+    }, {toDelete: [], toCommit: []});
+    git.commit(this.creator, this.project_name, filesToUpdate.toDelete, filesToUpdate.toCommit, message)
+        .then(() =>  
+        !status ? cb(null, {commit: 'success'}) : 
+                git.status(this.creator, this.project_name)
+                    .then(statuses => cb(null, {commit: 'success', status: statuses})))
+        .catch(cb);
 };
 
 projectSchema.statics.getProjects = function(username, cb) {

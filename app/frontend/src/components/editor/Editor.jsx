@@ -33,7 +33,11 @@ class Editor extends React.Component {
             name: 'Toggle Tree View',
             bindKey: {win: 'Ctrl-\\', mac: 'Cmd-\\'},
             exec: this.props.toggleDirectoryView
-        }]
+        },{
+            name: 'Undo',
+            bindKey: {win: 'Ctrl-Z', mac: 'Cmd-Z'},
+            exec: () => {/* prevent undo */}
+        }];
     }
 
     handleSave(editor) {
@@ -43,37 +47,16 @@ class Editor extends React.Component {
     
     render() {
         const { openFiles, activeFile, updateFileContents, switchTab, closeTab } = this.props;
-        /*if (openFiles.length === 0) {
-            return <div className="editor-instructions">
-                <div>
-                    Click the <span className="fa fa-folder"></span> icon or press &#8984;+\  ( Ctrl+\ )  to open up a file!
-                </div>
-            </div> 
-        }*/
 
         var view;
+        var style = {flex: 1, display: 'none'}
         switch(activeFile.node_type) {
             case 'F':
-                view = <AceEditor
-                    mode={activeFile.file_type}
-                    theme="dreamweaver"
-                    name="EDITOR"
-                    width="100%"
-                    editorProps={{$blockScrolling: Infinity}}
-                    value={activeFile.contents}
-                    onChange={updateFileContents}
-                    wrapEnabled={true}
-                    style={{flex: 1}}
-                    commands={this.commands}
-                    setOptions={{
-                        enableBasicAutocompletion: true,
-                    //  enableLiveAutocompletion: true,
-                        tabSize: 2,
-                        fontSize: 16,
-                    }}
-                />
+                view = null;
+                style.display = 'block';
                 break;
             case 'IFR':
+                style.display = 'none';
                 view = <iframe style={{flex: 1}} src={activeFile.path} frameBorder="0"></iframe>
                 break;
         }
@@ -91,6 +74,25 @@ class Editor extends React.Component {
                 })}
             </Tabs>
             {view}
+            <AceEditor
+                    mode={activeFile.file_type || "html"}
+                    theme="dreamweaver"
+                    name="EDITOR"
+                    width="100%"
+                    editorProps={{$blockScrolling: Infinity}}
+                    value={activeFile.contents}
+                    onChange={updateFileContents}
+                    wrapEnabled={true}
+                    style={style}
+                    commands={this.commands}
+                    setOptions={{
+                        enableBasicAutocompletion: true,
+                    //  enableLiveAutocompletion: true,
+                        tabSize: 2,
+                        fontSize: 16,
+                    }}
+                   // markers={[{ startRow: 0, endRow: 1, className: 'error-marker', type: 'background' }]}
+                />
         </div>;
     }
 }

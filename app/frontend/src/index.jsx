@@ -40,12 +40,6 @@ if (process.env.NODE_ENV !== `production`) {
 
 const store = compose(applyMiddleware(...middlewares))(createStore)(reducers)
 
-const onEnter = (x, replace) => {
-  console.log(store.getState().user.auth.isLoggedIn)
-  if (store.getState().user.auth.isLoggedIn) {
-    replace({ pathname: '/' })
-  }
-}
 
 render((
   <MuiThemeProvider muiTheme={muiTheme}>
