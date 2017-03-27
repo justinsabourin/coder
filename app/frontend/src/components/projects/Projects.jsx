@@ -72,7 +72,7 @@ class Projects extends React.Component {
         return <div>
             <AppBar
                 title="Projects"
-                titleStyle={{fontFamily: 'Indie Flower', fontSize: '2.4em'}}
+                titleStyle={{fontFamily: 'Open Sans', fontSize: '2.4em'}}
                 iconElementRight={<FlatButton
                                     label="New Project"
                                     icon={<FontIcon className="fa fa-plus" />}
@@ -99,7 +99,7 @@ class Projects extends React.Component {
                         onChange={(e) => this.setState({ projectName: e.target.value })}
                         floatingLabelText="Project Name"
                         errorText={projectNameError}
-                        floatingLabelStyle={{fontFamily: 'Indie Flower', fontSize: '1.7em'}}
+                        floatingLabelStyle={{fontFamily: 'Open Sans', fontSize: '1.7em'}}
                     />
             </Dialog>
         </div>;

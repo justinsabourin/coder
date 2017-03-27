@@ -38,7 +38,7 @@ class Project extends React.Component {
         return <div>
             <AppBar
                 title={this.props.metadata.project_name}
-                titleStyle={{fontFamily: 'Indie Flower', fontSize: '2.4em'}}
+                titleStyle={{fontFamily: 'Open Sans', fontSize: '2.4em'}}
                 iconElementLeft={<IconButton containerElement={<Link to='/'/>}  iconClassName="fa fa-arrow-left"></IconButton>}>
 
                 <IconMenu
