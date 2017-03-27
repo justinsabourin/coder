@@ -38,6 +38,7 @@ class Projects extends React.Component {
         } else if (!/^[0-9a-zA-Z]+$/.test(projectName)) {
             this.setState({ projectNameError: "Project name must be alphanumeric" });
         } else {
+            this.setState({ projectName: "", projectNameError: null });
             this.props.createProject(this.state.projectName);
         }
     }
