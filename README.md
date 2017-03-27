@@ -2,6 +2,8 @@
 
 The application can be accessed here: [https://webeditor.me](https://webeditor.me)
 
+[Credits](https://webeditor.me)
+
 # Running the application with docker [only works in deployment]
 
 ```
@@ -21,7 +23,7 @@ npm install
 npm start
 ```
 
-Then it should be running at[http://localhost:8080](http://localhost:8080)
+Then it should be running at [http://localhost:8080](http://localhost:8080)
 
 
 # Team Members
