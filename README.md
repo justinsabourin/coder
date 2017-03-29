@@ -4,6 +4,10 @@ The application can be accessed here: [https://webeditor.me](https://webeditor.m
 
 [Credits](https://webeditor.me/credits.html)
 
+# Video Demo
+
+[Video](https://www.youtube.com/watch?v=F79oSIy84jw)
+
 # Running the application with docker [only works in deployment]
 
 ```
