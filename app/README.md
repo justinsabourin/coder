@@ -2,3 +2,467 @@
 layout: default
 permalink: /app/README.MD
 ---
+
+# Online Web Editor: API Documentation
+
+# User API
+
+### Create
+
+
+- description: Creates a user and signs them in to the application
+- request: `POST /api/auth/signup`
+    - content-type: `application/json`
+    - body: object
+        - username: (string) The username of the user to create (must be between 3 and 15 alphanumeric characters)
+        - password: (string) The password of the user to create (must be between 4 and 20 characters)
+- response:  200
+    - content-type: `application/json`
+    - set-cookie: cookie
+    - body: object
+        - username: (string) The username of the newly created user
+- response: 500
+    - body: Username already exists
+- response: 400
+    - body: Request body malformed
+```
+curl -c cookie.txt -X POST -H "Content-Type: application/json"  -d '{
+        "username": "apidemo",
+        "password": "apidemo"
+}' "https://webeditor.me/api/auth/signup"
+```
+
+
+### Log in
+
+- description: Logs a user in to the application and returns a cookie for future use of the API.
+- request: `POST /api/auth`
+    - content-type: `application/json`
+    - body: object
+        - username: (string) The username of the user to sign in (must be between 3 and 15 alphanumeric characters)
+        - password: (string) The password of the user to sign in (must be between 4 and 20 characters)
+- response:  200
+    - content-type: `application/json`
+    - set-cookie: cookie
+    - body: object
+        - username: (string) The username of the currently signed in user
+- response: 401
+    - body: Username does not exist / Password is incorrect
+```
+curl -c cookie.txt -X POST -H "Content-Type: application/json"  -d '{
+        "username": "apidemo",
+        "password": "apidemo"
+}' "https://webeditor.me/api/auth"
+```
+
+### Log out
+
+- description: Signs a user out of the application
+- request: `GET /api/auth/logout`
+    - cookie: cookie
+- response: 200
+- response: 401
+    - body: Unauthenticated
+```
+# Sign in
+curl -c cookie.txt -X POST -H "Content-Type: application/json"  -d '{
+        "username": "apidemo",
+        "password": "apidemo"
+}' "https://webeditor.me/api/auth"
+
+# Log out
+curl -b cookie.txt "https://webeditor.me/api/auth/logout"
+```
+
+
+
+### Read
+
+- description: Retrieves information about the currently logged in user.
+- request: `GET /api/auth/self`
+    - cookie: cookie
+- response: 200
+    - body: object
+        - username: (string) The current users username
+- response: 401
+    - body: Not authenticated
+```
+# Sign in
+curl -c cookie.txt -X POST -H "Content-Type: application/json"  -d '{
+        "username": "apidemo",
+        "password": "apidemo"
+}' "https://webeditor.me/api/auth"
+
+# Get self
+curl -b cookie.txt "https://webeditor.me/api/auth/self"
+```
+
+
+# Projects API
+
+### Create
+
+- description: For authenticated users, create a new project. Also init's a new git repository for this project. The project comes with an 'index.html' in the top level directory.
+- request: `POST /api/projects/users/:username/projects`
+    - content-type : `application/json`
+    - cookie: cookie
+    - body:
+        - project_name: (string) The name of the project to be created (Must be between 2 and 15 alphanumeric characters)
+- response: 200
+    - content-type: `application/json`
+    - body: object
+        - project_name: (string) The name of the newly created project
+        - creator: (string) The username of the creator of this project
+- response: 500
+    - body: Username must be between 2 and 15 alphanumeric characters
+- response: 400
+    - body: Project name already exists
+- response: 401
+    - body: Unauthenticated [No session]
+- response: 401
+    - body: Unauthorized [Session exists, but does not own the project]
+```
+# Sign in
+curl -c cookie.txt -X POST -H "Content-Type: application/json"  -d '{
+        "username": "apidemo",
+        "password": "apidemo"
+}' "https://webeditor.me/api/auth"
+
+# Create project
+curl -b cookie.txt -X POST -H "Content-Type: application/json" -d '{
+    "project_name": "newproject"
+}' "https://webeditor.me/api/projects/users/apidemo/projects"
+```
+
+### Read
+
+- description: For authenticated users, read one of their own projects. The project contains information such as creator, name and a file tree for the git repository in this project. Optionally, get the status of the git repository for this project.
+- request: `GET /api/projects/users/:username/projects/:project[?status=[true | false]]`
+    - cookie: cookie
+- response: 200
+    - content-type: `application/json`
+    - body: object
+        - creator: (string) The username of the creator of this project
+        - project_name: (string) The name of this project
+        - files: object
+            [FILE_PATH]: object
+                - name: (string) The name of the file (example: index.html)
+                - path: (string) The full path of the file (example: /index.html)
+                - node_type: (string) "F" if this a file or "D" if this is a directory
+                - file_type: (string) One of: html, css or javascript [Only for files]
+                - children: (array of string) An array of paths to the children of this directory [Only for directories]
+        - status: object [Only present if status=true]
+            - [FILE PATH]: object
+                - path: (string) The path to this file
+                - type: (string) The status type of this file (One of: NEW, DELETED, MODIFIED, RENAMED or CONFLICTED)
+- response: 404
+    - body: project doesnt exist
+- response: 401
+    - body: Unauthenticated [No session]
+- response: 401
+    - body: Unauthorized [Session exists, but does not own the project] 
+```
+# Sign in
+curl -c cookie.txt -X POST -H "Content-Type: application/json"  -d '{
+        "username": "apidemo",
+        "password": "apidemo"
+}' "https://webeditor.me/api/auth"
+
+# Read project
+curl -b cookie.txt "https://webeditor.me/api/projects/users/apidemo/porjects/newproject"
+```
+
+### Read
+
+- description: Retrieve the projects for the current user
+- request: `GET /api/projects/users/:username`
+    - cookie: cookie
+- response: 200
+    - content-type: `application/json`
+    - body: object
+        - list: array of objects
+            - creator: (string) The username of the creator of this project
+            - project_name: (string) The name of this project
+```
+# Sign in
+curl -c cookie.txt -X POST -H "Content-Type: application/json"  -d '{
+        "username": "apidemo",
+        "password": "apidemo"
+}' "https://webeditor.me/api/auth"
+
+# Read projects
+curl -b cookie.txt "https://webeditor.me/api/projects/users/apidemo/projects"
+```
+
+### Read
+
+- description: Retrieve the status of the git repository for a project.
+- request: `GET /api/projects/users/:username/projects/:project/status`
+    - cookie: cookie
+- response: 200
+    - content-type: `application/json`
+    - body: object
+        - [FILE PATH]: object
+            - path: (string) The path to this file
+            - type: (string) The status type of this file (One of: NEW, DELETED, MODIFIED, RENAMED or CONFLICTED)
+- response: 404
+    - body: project doesnt exist
+- response: 401
+    - body: Unauthenticated [No session]
+- response: 401
+    - body: Unauthorized [Session exists, but does not own the project]
+```
+# Sign in
+curl -c cookie.txt -X POST -H "Content-Type: application/json"  -d '{
+        "username": "apidemo",
+        "password": "apidemo"
+}' "https://webeditor.me/api/auth"
+
+# Get status
+curl -b cookie.txt "https://webeditor.me/api/projects/users/apidemo/projects/newproject/status"
+```
+
+
+### Create
+
+- description: Commit the files to the git repository for a project, with the given commit message.
+- request: `POST /api/projects/users/:username/projects/:project/commit`
+    - content-type: `application/json`
+    - cookie: cookie
+    - body: object
+        - files: (array of objects)
+            - path: (string) path of file to commit
+            - type: (string) status type (One of: NEW, DELETED, MODIFIED, RENAMED or CONFLICTED)
+        - message: (string) The commit message
+- response: 200
+    - body: object
+        - commit: (string) success
+- response: 404
+    - body: project doesnt exist
+- response: 401
+    - body: Unauthenticated [No session]
+- response: 401
+    - body: Unauthorized [Session exists, but does not own the project]
+- response: 400
+    - body: Files must be a non empty array
+- response: 
+    - body: Files are malformed. Must contain a path and type
+- response: 
+    - body: Commit message must be a non empty string
+
+```
+# Sign in
+curl -c cookie.txt -X POST -H "Content-Type: application/json"  -d '{
+        "username": "apidemo",
+        "password": "apidemo"
+}' "https://webeditor.me/api/auth"
+
+# Update index.html
+curl -b cookie.txt -X PATCH -H "Content-Type: application/json" -d '{
+    "contents": "<html>UPDATED</html>"
+}' "https://webeditor.me/api/projects/users/apidemo/projects/newproject/path/index.html"
+
+# Commit index.html
+curl -b cookie.txt -X POST -H "Content-Type: application/json" -d '{
+    "files": [
+        {
+            "path": "/index.html",
+            "type": "MODIFIED"
+        }
+    ],
+    "message": "Commit message"
+}' "https://webeditor.me/api/projects/users/apidemo/projects/newproject/commit"
+```
+
+# Files API
+
+### Create
+
+- description: Create the file with the given path (e.g. '/index.html' creates the file 'index.html' in the top level directory. '/js/a.js' creates the file 'a.js' in the directory 'js') in the given project.
+Optionally, get the status of the git repository for this project after the file is created.
+- request: `PUT /api/projects/users/:username/projects/:project/path/:path[?status=[true | false]]`
+    - content-type: `application/json`
+    - cookie: cookie
+    - body: object
+        - type: (string) "F" if this a file or "D" if this is a directory
+        - contents: (string) Initial content of the file [Ignored for directories, optional for files]
+- response: 200
+    - content-type: `application/json`
+    - body: object
+        - creator: (string) The username of the creator of this project
+        - project_name: (string) The name of this project
+        - name: (string) The name of the file (example: index.html)
+        - path: (string) The full path of the file (example: /index.html)
+        - node_type: (string) "F" if this a file or "D" if this is a directory
+        - file_type: (string) One of: html, css or javascript [Only for files]
+        - contents: (string) contents of the file [Only fo files]
+        - status: (object) The current status of the files in the project [Only present if status=true]
+            - [FILE PATH]: object
+                - path: (string) The path to this file
+                - type: (string) The status type of this file (One of: NEW, DELETED, MODIFIED, RENAMED or CONFLICTED)
+- response: 404
+    - body: Project does not exist
+- response: 401
+    - body: Unauthenticated [No session]
+- response: 401
+    - body: Unauthorized [Session exists, but does not own the project]
+- response: 400
+    - body: Malformed file path
+- response: 400
+    - body: You can only create html, css or javascript files
+- response: 400
+    - body: Directory names must be alphanumeric
+- response: 400
+    - body: Unrecognized type
+- response: 400
+    - body: Directory already exists
+```
+# Sign in
+curl -c cookie.txt -X POST -H "Content-Type: application/json"  -d '{
+        "username": "apidemo",
+        "password": "apidemo"
+}' "https://webeditor.me/api/auth"
+
+# Create script.js
+curl -b cookie.txt -X PUT -H "Content-Type: application/json" -d '{
+    "type": "F",
+    "contents": "Initial content"
+}' "https://webeditor.me/api/projects/users/apidemo/projects/newproject/path/script.js"
+```
+
+### Read
+
+- description: Reads a file with the given path in the given project. 
+- request: `GET  /api/projects/users/:username/projects/:project/path/:path`
+    - cookie: cookie
+- response: 200
+    - content-type: `application/json`
+    - body: object
+        - creator: (string) The username of the creator of this project
+        - project_name: (string) The name of this project
+        - name: (string) The name of the file (example: index.html)
+        - path: (string) The full path of the file (example: /index.html)
+        - node_type: (string) "F" if this a file or "D" if this is a directory
+        - file_type: (string) One of: html, css or javascript [Only for files]
+        - contents: (string) contents of the file [Only fo files]
+- response: 404
+    - body: Project does not exist
+- response: 404
+    - body: File does not exist
+- response: 401
+    - body: Unauthenticated [No session]
+- response: 401
+    - body: Unauthorized [Session exists, but does not own the project]
+- response: 400
+    - body: Malformed file path
+- response: 400
+    - body: Invalid path. Directories must be alphanumberic and files must be alphanumeric and end in .html, .css or .js
+```
+# Sign in
+curl -c cookie.txt -X POST -H "Content-Type: application/json"  -d '{
+        "username": "apidemo",
+        "password": "apidemo"
+}' "https://webeditor.me/api/auth"
+
+# Read script.js
+curl -b cookie.txt "https://webeditor.me/api/projects/users/apidemo/projects/newproject/path/script.js"
+```
+
+
+### Update
+
+- description: Updates the contents of the given file in the given project (does not work for directories). Optionally, get the status of the git repository for this project after the file is updated.
+- description: Reads a file with the given path in the given project. 
+- request: `PATCH /api/projects/users/:username/projects/:project/path/:path[?status=[true | false]]`
+    - cookie: cookie
+    - body: object
+        - contents: (string) the new content for the file
+- response: 200
+    - content-type: `application/json`
+    - body: object
+        - creator: (string) The username of the creator of this project
+        - project_name: (string) The name of this project
+        - name: (string) The name of the file (example: index.html)
+        - path: (string) The full path of the file (example: /index.html)
+        - node_type: (string) "F" if this a file or "D" if this is a directory
+        - file_type: (string) One of: html, css or javascript [Only for files]
+        - contents: (string) contents of the file [Only for files]
+        - status: (object) The current status of the files in the project [Only present if status=true]
+            - [FILE PATH]: object
+                - path: (string) The path to this file
+                - type: (string) The status type of this file (One of: NEW, DELETED, MODIFIED, RENAMED or CONFLICTED)
+- response: 404
+    - body: Project does not exist
+- response: 401
+    - body: Unauthenticated [No session]
+- response: 401
+    - body: Unauthorized [Session exists, but does not own the project]
+- response: 400
+    - body: Malformed file path
+- response: 400
+    - body: Invalid path. Directories must be alphanumberic and files must be alphanumeric and end in .html, .css or .js
+```
+# Sign in
+curl -c cookie.txt -X POST -H "Content-Type: application/json"  -d '{
+        "username": "apidemo",
+        "password": "apidemo"
+}' "https://webeditor.me/api/auth"
+
+# Update index.html
+curl -b cookie.txt -X PATCH -H "Content-Type: application/json" -d '{
+    "contents": "<html>UPDATED</html>"
+}' "https://webeditor.me/api/projects/users/apidemo/projects/newproject/path/index.html"
+```
+
+### Delete
+
+- description: Deletes the given file in the given project (for directories, deletes all children as well). Optionally, get the status of the git repository for this project after the file is deleted.
+- description: Reads a file with the given path in the given project. 
+- request: `DELETE /api/projects/users/:username/projects/:project/path/:path[?status=[true | false]]`
+    - cookie: cookie
+- response: 200
+    - content-type: `application/json`
+    - body: (object) The current status of the files in the project [Only present if status=true]
+        - [FILE PATH]: object
+            - path: (string) The path to this file
+            - type: (string) The status type of this file (One of: NEW, DELETED, MODIFIED, RENAMED or CONFLICTED)
+- response: 404
+    - body: Project does not exist
+- response: 401
+    - body: Unauthenticated [No session]
+- response: 401
+    - body: Unauthorized [Session exists, but does not own the project]
+- response: 400
+    - body: Malformed file path
+- response: 400
+    - body: Invalid path. Directories must be alphanumberic and files must be alphanumeric and end in .html, .css or .js
+```
+# Sign in
+curl -c cookie.txt -X POST -H "Content-Type: application/json"  -d '{
+        "username": "apidemo",
+        "password": "apidemo"
+}' "https://webeditor.me/api/auth"
+
+# DELETE script.js
+curl -b cookie.txt -X DELETE "https://webeditor.me/api/projects/users/apidemo/projects/newproject/path/script.js?status=true"
+```
+
+# Static Content API
+
+# Read
+
+- description: Retrieves the raw file for a given project, so it can be displayed in a browser
+- request: `GET /staticcontent/users/:username/projects/:project/:path`
+- response: 200
+    - content-type: one of `text/html`,`text/css` or `application/javascript`, depending on `:path`
+    - body: [raw file content]
+- response: 404
+    - body: Project does not exist
+- response: 400
+    - body: Malformed file path
+- response: 500
+    - body: Can not retrieve directories
+```
+# Read index.html
+curl "https://webeditor.me/staticcontent/users/apidemo/projects/newproject/index.html"
+```
