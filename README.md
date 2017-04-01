@@ -2,6 +2,8 @@
 
 The application can be accessed here: [https://webeditor.me](https://webeditor.me)
 
+Documentation: Go to `app/README.md` or visit [https://webeditor.me/docs/documentation.html](https://webeditor.me/docs/documentation.html)
+
 [Credits](https://webeditor.me/credits.html)
 
 # Video Demo
