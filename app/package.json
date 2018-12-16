@@ -28,7 +28,7 @@
     "if-env": "^1.0.0",
     "material-ui": "^0.17.0",
     "mongoose": "^4.9.1",
-    "nodegit": "^0.18.0",
+    "nodegit": "^0.23.0",
     "passport": "^0.3.2",
     "passport-github": "^1.1.0",
     "passport-json": "^1.2.0",
