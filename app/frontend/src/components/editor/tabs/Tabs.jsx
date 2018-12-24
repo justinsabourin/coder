@@ -1,10 +1,22 @@
-import React from 'react';
+import React from "react";
+import { withStyles } from "@material-ui/core";
 
-const Tabs = ({children}) => {
-    return <div className="tab-list">
-        {children}
-    </div>
+const styles = theme => ({
+  tabList: {
+    width: "100%",
+    display: "flex",
+    overflowX: "auto",
+    backgroundColor: theme.palette.primary.dark,
+    padding: 0,
+    margin: 0,
+    "&::-webkit-scrollbar": {
+      display: "none"
+    }
+  }
+});
+
+const Tabs = ({ children, classes }) => {
+  return <div className={classes.tabList}>{children}</div>;
 };
 
-
-export default Tabs;
+export default withStyles(styles)(Tabs);

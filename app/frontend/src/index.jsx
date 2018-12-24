@@ -1,57 +1,111 @@
-import React from 'react';
-import { render } from 'react-dom';
-import { Router, Route, IndexRoute, browserHistory } from 'react-router';
-import { Provider } from 'react-redux';
-import { createStore, applyMiddleware, compose } from 'redux';
-import thunk from 'redux-thunk';
+import React from "react";
+import { connect } from "react-redux";
+import { checkUser } from "./actions/userActions.jsx";
+import { render } from "react-dom";
+import { Router, Route, Switch } from "react-router-dom";
+import { Provider } from "react-redux";
+import { createStore, applyMiddleware, compose } from "redux";
+import thunk from "redux-thunk";
+import history from "./history";
 
-import Login from './containers/Login.jsx';
-import Signup from './containers/Signup.jsx';
-import AuthenticateContainer from './containers/AuthenticateContainer.jsx';
-import Projects from './components/projects/Projects.jsx';
-import Project from './components/editor/Project.jsx';
-import reducers from './reducers/index.jsx';
-import loginRedirect from './middleware/loginRedirect.jsx';
+import Login from "./components/login/Login.jsx";
+//import Signup from './containers/Signup.jsx';
+import PrivateRoute from "./components/shared/PrivateRoute.jsx";
+import Projects from "./components/projects/Projects.jsx";
+import Project from "./components/editor/Project.jsx";
+import reducers from "./reducers/index.jsx";
+import loginRedirect from "./middleware/loginRedirect.jsx";
 
+import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
+import { supportConstant } from "brace/mode/html";
+import { CssBaseline } from "@material-ui/core";
 
-import "./touchtap.jsx";
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
+const theme = createMuiTheme({
+  palette: {
+    primary: {
+      main: "#393f3f"
+    },
+    secondary: {
+      main: "#C0C0C0"
+    },
+    // error: will use the default color
+    background: {
+      default: "#393f3f"
+    }
+  },
 
-
-
-const muiTheme = getMuiTheme();
+  typography: {
+    useNextVariants: true
+  },
+  drawer: {
+    width: 200
+  },
+  gitDrawer: {
+    height: 250
+  }
+});
 
 const middlewares = [thunk, loginRedirect];
 
 if (process.env.NODE_ENV !== `production`) {
   if (module.hot) {
-    module.hot.accept('./reducers/index.jsx', () => {
-      const nextRootReducer = require('./reducers/index.jsx');
+    module.hot.accept("./reducers/index.jsx", () => {
+      const nextRootReducer = require("./reducers/index.jsx");
       store.replaceReducer(nextRootReducer);
     });
   }
-  const createLogger = require(`redux-logger`);
+  const createLogger = require(`redux-logger`).createLogger;
   const logger = createLogger();
   middlewares.push(logger);
 }
 
+const store = compose(applyMiddleware(...middlewares))(createStore)(reducers);
 
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+  }
 
-const store = compose(applyMiddleware(...middlewares))(createStore)(reducers)
+  componentDidMount() {
+    this.props.checkAuth();
+  }
 
-
-render((
-  <MuiThemeProvider muiTheme={muiTheme}>
-    <Provider store={store}>
-      <Router history={browserHistory}>
-        <Route path="/signup" component={Signup}/>
-        <Route path="/login" component={Login} />
-        <Route  component={AuthenticateContainer} >
-          <Route path="/" component={Projects}/>
-          <Route path="/:project" component={Project} />
-        </Route>
+  render() {
+    return (
+      <Router history={history}>
+        <Switch>
+          {/* <Route path="/signup" component={Signup}/> */}
+          <Route exact path="/login" component={Login} />
+          <PrivateRoute exact path="/" redirect="/login" component={Projects} />
+          <PrivateRoute
+            path="/:project"
+            redirect="/login"
+            component={Project}
+          />
+        </Switch>
       </Router>
+    );
+  }
+}
+
+const mapDispatchToProps = dispatch => {
+  return {
+    checkAuth: () => {
+      dispatch(checkUser());
+    }
+  };
+};
+
+const Application = connect(
+  null,
+  mapDispatchToProps
+)(App);
+render(
+  <MuiThemeProvider theme={theme}>
+    <CssBaseline />
+    <Provider store={store}>
+      <Application />
     </Provider>
-  </MuiThemeProvider>
-), document.getElementById('app'))
+  </MuiThemeProvider>,
+  document.getElementById("app")
+);

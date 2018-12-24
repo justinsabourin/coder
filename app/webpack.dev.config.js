@@ -1,19 +1,22 @@
 process.noDeprecation = true;
+const path = require('path');
 var webpack = require('webpack');
+console.log(path.resolve(__dirname, 'frontend', 'src', 'index.jsx'));
 module.exports = {
+   mode: 'none',
    entry: [ 
-        __dirname + '/frontend/src/index.jsx',
+        path.resolve('frontend', 'src', 'index.jsx'),
         'webpack/hot/only-dev-server',
         'webpack-dev-server/client?http://localhost:8081'
     ],
 	
    output: {
-      path: __dirname + '/frontend/public/js/',
+      path: path.resolve('frontend', 'public', 'js'),
       filename: 'bundle.js',
       publicPath: 'http://localhost:8081/js/'
    },
 
-    devtool: 'inline-source-map',
+   devtool: 'inline-source-map',
 
     plugins: [
         new webpack.HotModuleReplacementPlugin(),
@@ -21,14 +24,15 @@ module.exports = {
     ],
 
     module: {
-        loaders: [
+        rules: [
             {
                 test: /\.jsx?$/,
                 exclude: /node_modules/,
                 loader: 'babel-loader',
-                    
-                query: {
-                presets: ['es2015', 'react', 'stage-2', 'react-hmre']
+                
+                options: {
+                    presets: ['@babel/preset-env', '@babel/preset-react'],
+                    plugins: ["babel-plugin-styled-components"]
                 }
             },{
                 test: /\.css$/,

@@ -3,29 +3,34 @@ const fsp = require('fs-promise');
 const NodeGit = require('nodegit');
 
 if (process.env.NODE_ENV !== 'production') {
-    var config = require('../config.dev.js');
+  var config = require('../config.dev.js');
 } else {
-    var config = require('../config.js');
+  var config = require('../config.js');
 }
 
-const securePath = function(filePath, username, project_name) {
-    var absPath = path.resolve(path.join(config.repoPath, username, project_name, filePath));
-    var reg = new RegExp('^' + path.join(config.repoPath, username, project_name) + '(/[a-zA-Z0-9]+)+(.(html|js|css))?$');
-    if (!reg.test(absPath)) {
-        return Promise.reject({status: 400, message: "Invalid file path"});
-    } else {
-        return Promise.resolve(absPath);
-    }
+const securePath = function (filePath, username, project_name) {
+  var absPath = path.resolve(path.join(config.repoPath, username, project_name, filePath));
+  var reg = new RegExp('^' + path.join(config.repoPath, username, project_name) + '(/[a-zA-Z0-9]+)+(.(html|js|css))?$');
+  if (!reg.test(absPath)) {
+    return Promise.reject({
+      status: 400,
+      message: "Invalid file path"
+    });
+  } else {
+    return Promise.resolve(absPath);
+  }
 };
+
+const sanitizePath = async (fpath, username, project, repoPath) => (await securePath(fpath, username, project)).match(new RegExp('^' + path.join(repoPath, '/') + '(.*)$'))[1];
 
 const git = {};
 
 
 
-git.initProject = function(username, project_name) {
-      // have to break indentation, TODO: look for workaround
-    const welcomeMessage = 
-`<html>
+git.initProject = async function (username, project_name) {
+  // have to break indentation, TODO: look for workaround
+  const welcomeMessage =
+    `<html>
     <head>
         <title>${username}</title>
         <style>
@@ -57,245 +62,248 @@ git.initProject = function(username, project_name) {
         </div>
     </body>
 </html>`;
-    
-    var userPath = path.resolve(path.join(config.repoPath, username));
-    var projectPath = path.join(userPath, project_name);
 
-    var repo;
-    var index;
+  const userPath = path.resolve(path.join(config.repoPath, username));
+  const projectPath = path.join(userPath, project_name);
 
-    // Taken and modified from nodegit examples: https://github.com/nodegit/nodegit/blob/master/examples/add-and-commit.js
-    return fsp.ensureDir(userPath)
-        .then(() => fsp.mkdir(projectPath))
-        .catch((err) => Promise.reject({ status: 400, type: 'json', message: { type: 'project_name', message: 'Project name already exists'}}))
-        .then(() => NodeGit.Repository.init(projectPath, 0))
-        .then((repoResult) => {
-            repo = repoResult;
-            fsp.writeFile(path.join(projectPath, 'index.html'), welcomeMessage);
-        })
-        .then(() => repo.refreshIndex())
-        .then((indexResult) => {index = indexResult;})
-        .then(() => index.addByPath('index.html'))
-        .then(() => index.write())
-        .then(() => index.writeTree())
-        .then((oid) => {
-            var author = NodeGit.Signature.create(username,
-                "schacon@gmail.com", 123456789, 60);
-            var committer = NodeGit.Signature.create(username,
-                "scott@github.com", 987654321, 90);
-            repo.createCommit("HEAD", author, committer, "message", oid, []);
-        })
-        .catch((err) => Promise.reject(err.status ? err : {status: 500, message: 'Unable to create project at this time. Try again later.'}));
+
+  // Taken and modified from nodegit examples: https://github.com/nodegit/nodegit/blob/master/examples/add-and-commit.js
+  try {
+    await fsp.ensureDir(userPath)
+    await fsp.mkdir(projectPath)
+  } catch (err) {
+    throw {
+      status: 400,
+      type: 'json',
+      message: {
+        type: 'project_name',
+        message: 'Project name already exists'
+      }
+    }
+  }
+
+  try {
+    let repo = await NodeGit.Repository.init(projectPath, 0);
+    await fsp.writeFile(path.join(projectPath, 'index.html'), welcomeMessage);
+    let index = await repo.refreshIndex();
+    await index.addByPath('index.html');
+    await index.write();
+    let oid = await index.writeTree();
+    await repo.createCommit("HEAD", NodeGit.Signature.create(username,
+      "schacon@gmail.com", 123456789, 60), NodeGit.Signature.create(username,
+      "scott@github.com", 987654321, 90), "message", oid, []);
+  } catch (err) {
+    throw err.status ? err : {
+      status: 500,
+      message: 'Unable to create project at this time. Try again later.'
+    }
+  }
 
 };
 
-git.getDirectoryTree = function(username, project) {
-    var repoPath = path.join(config.repoPath, username, project);
-    var tree = {};
+git.getDirectoryTree = async function (username, project) {
+  let repoPath = path.join(config.repoPath, username, project);
 
-    const treeCreate = (parentPath, fileName) => {
-        if (fileName.startsWith('.')) return null;
-        var realFilePath = path.join(repoPath, parentPath, fileName);
-        var virtFilePath = path.join(parentPath, fileName);
-        return fsp.stat(realFilePath)
-            .then((stats) => {
-                tree[virtFilePath] = {
-                    name: fileName,
-                    path: virtFilePath,
-                };
-                if (stats.isFile()) {
-                    tree[virtFilePath].node_type = 'F';
-                    var tmp = fileName.split('.').slice(-1)[0];
-                    tree[virtFilePath].file_type = tmp === 'js' ? 'javascript' : tmp;
-                    return Promise.resolve(tree);
-                } else if (stats.isDirectory()) {
-                    tree[virtFilePath].node_type = 'D';
-                    return fsp.readdir(realFilePath)
-                        .then((files) => { 
-                            tree[virtFilePath].children = files.map(file => path.join(virtFilePath, file));
-                            return Promise.all(files.map((file) => treeCreate(virtFilePath, file)));
-                        })
-                        .then(() => tree);
-                } 
-            });
+  const treeCreate = async (parentPath, fileName, tree = {}) => {
+    if (fileName.startsWith('.')) return null;
+    let realFilePath = path.join(repoPath, parentPath, fileName);
+    let virtFilePath = path.join(parentPath, fileName);
+    let stats = await fsp.stat(realFilePath)
+    tree[virtFilePath] = {
+      name: fileName,
+      path: virtFilePath,
     };
-
-    return treeCreate('/', '')
-        .then((tree) => {
-            delete tree['/'];
-            return tree;
-        })
-        .catch(() => Promise.reject({status: 500, message: 'Unable to get directory tree for project at this time. Please try again later'}));
+    if (stats.isFile()) {
+      tree[virtFilePath].node_type = 'F';
+      let tmp = fileName.split('.').slice(-1)[0];
+      tree[virtFilePath].file_type = tmp === 'js' ? 'javascript' : tmp;
+      return tree;
+    } else if (stats.isDirectory()) {
+      tree[virtFilePath].node_type = 'D';
+      let files = await fsp.readdir(realFilePath);
+      tree[virtFilePath].children = files.map(file => path.join(virtFilePath, file));
+      files.forEach(async file => await treeCreate(virtFilePath, file, tree));
+      return tree;
+    }
+  };
+  try {
+    let tree = await treeCreate('/', '');
+    delete tree['/'];
+    return tree;
+  } catch (err) {
+    throw {
+      status: 500,
+      message: 'Unable to get directory tree for project at this time. Please try again later'
+    };
+  }
 };
 
 /**
  * Creates a file or updates a file that already exists,
  * Creates a directory or throws an error if directory already exists
  */
-git.createFile = function(username, project, fileInfo) {
-    var repoPath = path.join(config.repoPath, username, project);
-
-    return fsp.exists(repoPath)
-        .then(() => securePath(fileInfo.path, username, project))
-        .then((realFilePath) => {
-            if (fileInfo.type === 'F') {
-                return fsp.writeFile(realFilePath, fileInfo.contents);
-            } else if (fileInfo.type === 'D') {
-                return fsp.mkdir(realFilePath);
-            }
-            
-        })
-        .catch((err) => {
-            if (err.status) return Promise.reject(err);
-            if (err.code === 'EEXIST') return Promise.reject({status: 400, message: `Directory ${fileInfo.path} already exists`});
-            return Promise.reject({status: 500, message: 'Unable to create file at this time. Please try again later.'});
-        });
-};
-
-
-git.deleteFile = function(username, project, filePath) {
-    var repoPath = path.join(config.repoPath, username, project);
-
-    return fsp.exists(repoPath)
-        .then(() => securePath(filePath, username, project))
-        .then((realFilePath) => fsp.remove(realFilePath))
-        .catch((err) => Promise.reject({status: 500, message: 'Unable to delete file.'}));
-};
-
-git.commit = function(username, project, deletedFiles, changedFiles, message) {
-    var repoPath = path.join(config.repoPath, username, project);
-
-    var repo, index, oid, deletedPaths;
-
-    var start = fsp.exists(repoPath)
-        .then(() => NodeGit.Repository.open(repoPath))
-        .then(repoResult => {
-            repo = repoResult;
-            return repo.refreshIndex();
-        })
-        .then(indexResult => {
-            index = indexResult;
-            //return index.read(1);
-        });
-
-    if (deletedFiles.length !== 0) {
-        start = start
-        .then(() => {
-            return Promise.all(deletedFiles.map(file => 
-                securePath(file, username, project)
-                    .then(absPath => absPath.match(new RegExp('^' + path.join(repoPath, '/') + '(.*)$'))[1])
-            ));
-        })
-        .catch(err => Promise.reject({status: 400, message: 'Invalid file paths'}))
-        .then((filePaths) => {
-            return Promise.all(filePaths.map(filePath => index.removeByPath(filePath)));
-        });
-        
-    }  
-    if (changedFiles.length !== 0) {
-        start = start
-        .then(() => {
-            return Promise.all(changedFiles.map(file => 
-                securePath(file, username, project)
-                    .then(absPath => absPath.match(new RegExp('^' + path.join(repoPath, '/') + '(.*)$'))[1])
-            ));
-        })
-        .catch(err => Promise.reject({status: 400, message: 'Invalid file paths'}))
-        .then((filePaths) => {
-            return Promise.all(filePaths.map(filePath => index.addByPath(filePath)));
-        })
-        ;
+git.createFile = async function (username, project, fileInfo) {
+  let repoPath = path.join(config.repoPath, username, project);
+  try {
+    await fsp.exists(repoPath);
+    let realFilePath = await securePath(fileInfo.path, username, project);
+    if (fileInfo.type === 'F') {
+      return fsp.writeFile(realFilePath, fileInfo.contents);
+    } else if (fileInfo.type === 'D') {
+      return fsp.mkdir(realFilePath);
     }
 
-    return start
-        .then(_ => index.write())
-        .then(_ => index.writeTree())
-        .then(oidResult => {
-            oid = oidResult;
-            return NodeGit.Reference.nameToId(repo, 'HEAD');
-        })
-        .then(head => {
-            return repo.getCommit(head);
-        })
-        .then(parent => {
-            var author = NodeGit.Signature.now(username, "text@example.com");
-            var committer = author;
-            return repo.createCommit('HEAD', author, committer, message, oid, [parent]);
-        })
-        .catch((err) => Promise.reject(err.status ? err :{status: 500, message: 'Unable to commit files at this time'}));
+  } catch (err) {
+    if (err.status) throw err;
+    if (err.code === 'EEXIST') throw {
+      status: 400,
+      message: `Directory ${fileInfo.path} already exists`
+    };
+    throw {
+      status: 500,
+      message: 'Unable to create file at this time. Please try again later.'
+    };
+  }
 };
 
-git.commitDelete = function(username, project, files) {
-    var repoPath = path.join(config.repoPath, username, project);
 
-    return fsp.exists(repoPath)
-        .then(() => NodeGit.Repository.open(repoPath))
-        .then(repoResult => {
-            repo = repoResult;
-            return Promise.all(files.map(file => 
-                securePath(file, username, project)
-                    .then(absPath => absPath.match(new RegExp('^' + path.join(repoPath, '/') + '(.*)$'))[1])
-            ));
-        })
+git.deleteFile = async function (username, project, filePath) {
+  let repoPath = path.join(config.repoPath, username, project);
+  try {
+    await fsp.exists(repoPath)
+    let realFilePath = await securePath(filePath, username, project);
+    await fsp.remove(realFilePath);
+  } catch (err) {
+    throw {
+      status: 500,
+      message: 'Unable to delete file.'
+    };
+  }
 };
 
-git.getFile = function(username, project, filePath) {
-    var repoPath = path.join(config.repoPath, username, project);
+git.add = async function (username, project, deletedFiles, changedFiles) {
+  let repoPath = path.join(config.repoPath, username, project);
 
-    var file = {};
-    var realPath;
+  try {
+    await fsp.exists(repoPath);
+    let repo = await NodeGit.Repository.open(repoPath);
+    let index = await repo.refreshIndex();
 
-    return fsp.exists(repoPath)
-        .then(() => securePath(filePath, username, project))
-        .then((realFilePath) => {
-            realPath = realFilePath;
-            return fsp.stat(realPath);
-        })
-        .then((stat) => {
-            if (stat.isDirectory()) file.type = 'D';
-            else if (stat.isFile()) file.type = 'F';
-            else return Promise.reject();
-        })
-        .then(() => { 
-            if (file.type === 'F') return fsp.readFile(realPath, { encoding: 'utf-8' });
-            if (file.type === 'D') return fsp.readdir(realPath);
-        })
-        .then((contents) => {
-            file.contents = contents;
-            return file;
-        })
-        .catch(err => Promise.reject(err.status ? err : {status: 500, message: 'Unable to read file at this time.'}));
+    if (changedFiles.length !== 0) {
+      await Promise.all(changedFiles.map(async file => await index.addByPath(await sanitizePath(file, username, project, repoPath))));
+    }
+    if (deletedFiles.length !== 0) {
+      await Promise.all(deletedFiles.map(async file => await index.removeByPath(await sanitizePath(file, username, project, repoPath))));
+    }
+
+
+    await index.write();
+  } catch (err) {
+    console.log("Err: ", err);
+    throw {
+      status: 500,
+      message: 'Unable to add files.'
+    };
+  }
+}
+
+git.commit = async function (username, project, message) {
+  let repoPath = path.join(config.repoPath, username, project);
+
+  try {
+    await fsp.exists(repoPath);
+    let repo = await NodeGit.Repository.open(repoPath);
+    let index = await repo.refreshIndex();
+    let oid = await index.writeTree()
+    let head = await NodeGit.Reference.nameToId(repo, 'HEAD');
+    let parent = await repo.getCommit(head);
+    let author = committer = NodeGit.Signature.now(username, "text@example.com");
+    await repo.createCommit('HEAD', author, committer, message, oid, [parent]);
+  } catch (err) {
+    console.log(err);
+    throw err.status ? err : {
+      status: 500,
+      message: 'Unable to commit files at this time'
+    }
+  }
 };
 
-git.pushToRepo = function(project, username) {
+
+git.getFile = async function (username, project, filePath) {
+  let repoPath = path.join(config.repoPath, username, project);
+
+  let file = {};
+
+  try {
+    await fsp.exists(repoPath)
+    let realPath = await securePath(filePath, username, project);
+    let stat = await fsp.stat(realPath);
+
+    if (stat.isDirectory()) file.type = 'D';
+    else if (stat.isFile()) file.type = 'F';
+
+    if (file.type === 'F')
+      file.contents = await fsp.readFile(realPath, {
+        encoding: 'utf-8'
+      });
+    if (file.type === 'D')
+      file.contents = await fsp.readdir(realPath);
+
+    return file;
+  } catch (err) {
+    console.log(err);
+    throw err.status ? err : {
+      status: 500,
+      message: 'Unable to read file at this time.'
+    }
+  }
+};
+
+git.pushToRepo = function (project, username) {
 
 };
 
-git.status = function(username, project) {
-    var repoPath = path.join(config.repoPath, username, project);
-    return fsp.exists(repoPath)
-        .catch( _ => Promise.reject({ status: 404, message: 'Project does not exist'})) 
-        .then( _ => NodeGit.Repository.open(repoPath))
-        .then(function(repo) {
-           return repo.getStatus();
-        })
-        .then(function(statuses) {
-            return statuses.reduce(function(accum, file) {
-                var status = {};
-                status.path = '/' + file.path();
+git.status = async function (username, project) {
+  let repoPath = path.join(config.repoPath, username, project);
+  try {
+    await fsp.exists(repoPath)
+  } catch (err) {
+    throw {
+      status: 404,
+      message: 'Project does not exist'
+    }
+  }
 
-                if (file.isNew()) status.type = 'NEW';
-                if (file.isDeleted()) status.type = 'DELETED';
-                if (file.isModified()) status.type = 'MODIFIED';
-                if (file.isRenamed()) status.type = 'RENAMED';
-                if (file.isConflicted()) status.type = 'CONFLICTED';
-                accum[status.path] = status;
-                return accum;
-            }, {});
-        })
-        .catch(err => {
-            return err.status ? err : Promise.reject({status: 500, message: 'Unable to get project status at this time'});
-        });
+  try {
+    let repo = await NodeGit.Repository.open(repoPath);
+    let statuses = await repo.getStatus();
+    return statuses.reduce(function (accum, file) {
+      let status = {};
+      status.path = '/' + file.path();
+      console.log(file)
+      console.log(file.inIndex())
+      console.log(file.inWorkingTree());
+      console.log(file.headToIndex());
+      console.log(file.indexToWorkdir());
+      if (file.isNew()) status.type = 'NEW';
+      if (file.isDeleted()) status.type = 'DELETED';
+      if (file.isModified()) status.type = 'MODIFIED';
+      if (file.isRenamed()) status.type = 'RENAMED';
+      if (file.isConflicted()) status.type = 'CONFLICTED';
+      if (file.inIndex()) accum.staged[status.path] = status;
+      if (file.inWorkingTree()) accum.unstaged[status.path] = status;
+      return accum;
+    }, {
+      staged: {},
+      unstaged: {}
+    });
+  } catch (err) {
+    console.log(err)
+    throw err.status ? err : {
+      status: 500,
+      message: 'Unable to get project status at this time'
+    };
+  }
 };
 
 
