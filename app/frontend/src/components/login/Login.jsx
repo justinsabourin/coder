@@ -3,7 +3,6 @@ import { connect } from "react-redux";
 import { loginUser } from "../../actions/userActions.jsx";
 import { clearAuthError } from "../../actions/uiActions.jsx";
 import history from "../../history.js";
-import styled from "styled-components";
 import { Redirect } from "react-router-dom";
 
 import TextField from "@material-ui/core/TextField";
@@ -13,77 +12,59 @@ import { withStyles } from "@material-ui/core/styles";
 import Loader from "../shared/Loader.jsx";
 import Logo from "../shared/Logo.jsx";
 
-const LoginContainer = styled.div`
-   {
-    width: 100%;
-    height: 100%;
-    min-height: 350px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    font-family: "Roboto";
-    color: gray;
+const style = theme => ({
+  loginContainer: {
+    width: "100%",
+    height: "100%",
+    minHeight: 350,
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "space-between",
+    fontFamily: theme.typography.fontFamily,
+    color: theme.palette.primary.light
+  },
+  loginBox: {
+    marginTop: 40,
+    display: "flex",
+    flexDirection: "column",
+    width: 350,
+    height: 350,
+    background: theme.palette.primary.contrastText,
+    border: `1px solid ${theme.palette.primary.light}`,
+    borderRadius: 10
+  },
+  loginHeader: {
+    fontFamily: theme.typography.fontFamily,
+    textAlign: "center",
+    fontSize: "1.9em",
+    padding: 6,
+    borderBottom: `1px solid ${theme.palette.primary.light}`
+  },
+  loginForm: {
+    flex: 1,
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "flex-start"
+  },
+  loginInput: {
+    width: "90%",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    borderBottom: `1px solid ${theme.palette.primary.light}`
+  },
+  loginButtons: {
+    margin: "9px 0"
+  },
+  loginAlternative: {
+    flex: 1,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center"
   }
-`;
-
-const LoginBox = styled.div`
-   {
-    margin-top: 40px;
-    display: flex;
-    flex-direction: column;
-    width: 350px;
-    height: 350px;
-    background: white;
-    border: 1px solid gray;
-    border-radius: 10px;
-  }
-`;
-
-const LoginHeader = styled.div`
-   {
-    font-family: "Raleway", cursive;
-    text-align: center;
-    font-size: 1.9em;
-    padding: 6px 0;
-    border-bottom: 1px solid gray;
-  }
-`;
-
-const LoginForm = styled.form`
-   {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-  }
-`;
-
-const LoginInput = styled.div`
-   {
-    width: 90%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    border-bottom: 1px solid gray;
-  }
-`;
-
-const LoginButtons = styled.div`
-   {
-    margin: 9px 0;
-  }
-`;
-
-const LoginAlternative = styled.div`
-   {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-`;
+});
 
 const styles = theme => ({
   tooltip: {
@@ -106,8 +87,8 @@ class AuthenticationBox extends React.Component {
 
   onSubmit(e) {
     e.preventDefault();
-    var username = this.state.username;
-    var password = this.state.password;
+    let username = this.state.username;
+    let password = this.state.password;
 
     const errors = {
       usernameError: null,
@@ -132,23 +113,27 @@ class AuthenticationBox extends React.Component {
   }
 
   render() {
-    var { props } = this;
+    let { props } = this;
+    let { classes } = props;
 
     if (props.isLoggedIn) {
       return <Redirect to="/" />;
     }
 
-    var usernameError = props.authError.username || this.state.usernameError;
-    var passwordError = props.authError.password || this.state.passwordError;
+    let usernameError = props.authError.username || this.state.usernameError;
+    let passwordError = props.authError.password || this.state.passwordError;
 
     return (
-      <LoginContainer>
-        <LoginBox>
-          <LoginHeader>
+      <div className={classes.loginContainer}>
+        <div className={classes.loginBox}>
+          <div className={classes.loginHeader}>
             <Logo />
-          </LoginHeader>
-          <LoginForm onSubmit={this.onSubmit.bind(this)}>
-            <LoginInput>
+          </div>
+          <form
+            className={classes.loginForm}
+            onSubmit={this.onSubmit.bind(this)}
+          >
+            <div className={classes.loginInput}>
               <ErrorTooltip
                 open={!!this.state.usernameError}
                 title={this.state.usernameError || ""}
@@ -180,22 +165,22 @@ class AuthenticationBox extends React.Component {
                   variant="outlined"
                 />
               </ErrorTooltip>
-              <LoginButtons>
+              <div className={classes.loginButtons}>
                 <Button variant="contained" color="primary" type="submit">
                   {props.primaryLabel}
                 </Button>
-              </LoginButtons>
-            </LoginInput>
-            <LoginAlternative>
+              </div>
+            </div>
+            <div className={classes.loginAlternative}>
               {/* {<FlatButton
                 href="/api/auth/github"
                 label="Sign in with Github"
                 icon={<FontIcon className="fa fa-github" />}
               />} */}
-            </LoginAlternative>
-          </LoginForm>
-        </LoginBox>
-      </LoginContainer>
+            </div>
+          </form>
+        </div>
+      </div>
     );
   }
 }
@@ -223,6 +208,6 @@ const mapDispatchToProps = dispatch => {
 const Login = connect(
   mapStateToProps,
   mapDispatchToProps
-)(AuthenticationBox);
+)(withStyles(style)(AuthenticationBox));
 
 export default Login;

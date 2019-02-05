@@ -151,6 +151,7 @@ projectSchema.methods.deleteFile = async function (filePath, status, cb) {
         status: await git.status(this.creator, this.project_name)
       });
     }
+    cb(null, {})
   } catch (err) {
     cb(err)
   }
