@@ -3,7 +3,7 @@ var app = express();
 var fsp = require('fs-promise');
 var bodyParser = require('body-parser');
 var session = require('express-session');
-var MemcachedStore = require('connect-memjs')(session);
+var MemcachedStore = require('connect-memcached')(session);
 var mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
