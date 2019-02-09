@@ -124,17 +124,18 @@ class ProjectList extends React.Component {
             aria-label="Add"
             onClick={this.handleClickOpen}
             style={{ right: 10, position: "absolute" }}
+            disabled
           >
             <AddIcon />
           </Fab>
         </div>
 
         <div className={classNames(classes.panel, classes.projects)}>
-          <GridList cellHeight={150} cols={3} className={classes.gridList}>
+          <GridList cellHeight={200} cols={3} className={classes.gridList}>
             {projects.map((project, index) => (
               <GridListTile
                 className={classes.tile}
-                style={{ padding: 0, width: "32%" }}
+                style={{ padding: 0, width: "350px" }}
                 key={project.project_name}
                 onMouseEnter={this.onEnter.bind(this, index)}
                 onMouseLeave={() => this.setState({ hovering: null })}

@@ -157,11 +157,11 @@ class Projects extends React.Component {
 
             <div className={classes.grow} />
             <div className={classes.sectionDesktop}>
-              <IconButton color="inherit">
+              {/* <IconButton color="inherit">
                 <Badge badgeContent={17} color="secondary">
                   <NotificationsIcon />
                 </Badge>
-              </IconButton>
+              </IconButton> */}
               {/* <IconButton
                 aria-owns={isMenuOpen ? 'material-appbar' : undefined}
                 aria-haspopup="true"

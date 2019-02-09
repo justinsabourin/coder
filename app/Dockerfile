@@ -11,6 +11,5 @@ WORKDIR /home/server/app
 RUN npm install --production
 
 EXPOSE 8080
-EXPOSE 8082
 
 CMD npm start

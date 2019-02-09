@@ -1,6 +1,10 @@
 module.exports = {
-    repoPath: '/home/server/repositories',
+    repoPath: '/data/repositories',
     mongoURL: 'mongodb://mongo/webeditor',
-    memcachedURL: 'memcached:11211',
-    host: 'https://webeditor.me'
+    memcached: {
+        hosts: ['memcached:11211'],
+    },
+    host: 'https://webeditor.me',
+    port: process.env.PORT || 8080
 };
+

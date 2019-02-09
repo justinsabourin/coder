@@ -99,8 +99,8 @@ class AuthenticationBox extends React.Component {
     this.state = {
       usernameError: null,
       passwordError: null,
-      username: "",
-      password: ""
+      username: "demoaccount",
+      password: "demo_password"
     };
   }
 

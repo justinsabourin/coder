@@ -1,0 +1,9 @@
+setup:
+  addons:
+    - plan: mongolab
+    - plan: memcachedcloud
+build:
+  docker:
+    web: app/Dockerfile
+  config:
+    NODE_ENV: production

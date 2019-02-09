@@ -199,7 +199,7 @@ git.add = async function (username, project, deletedFiles, changedFiles) {
 
     await index.write();
   } catch (err) {
-    console.log("Err: ", err);
+   // console.log("Err: ", err);
     throw {
       status: 500,
       message: 'Unable to add files.'
@@ -220,7 +220,7 @@ git.commit = async function (username, project, message) {
     let author = committer = NodeGit.Signature.now(username, "text@example.com");
     await repo.createCommit('HEAD', author, committer, message, oid, [parent]);
   } catch (err) {
-    console.log(err);
+    //console.log(err);
     throw err.status ? err : {
       status: 500,
       message: 'Unable to commit files at this time'
@@ -251,7 +251,7 @@ git.getFile = async function (username, project, filePath) {
 
     return file;
   } catch (err) {
-    console.log(err);
+   // console.log(err);
     throw err.status ? err : {
       status: 500,
       message: 'Unable to read file at this time.'
@@ -280,11 +280,11 @@ git.status = async function (username, project) {
     return statuses.reduce(function (accum, file) {
       let status = {};
       status.path = '/' + file.path();
-      console.log(file)
-      console.log(file.inIndex())
-      console.log(file.inWorkingTree());
-      console.log(file.headToIndex());
-      console.log(file.indexToWorkdir());
+      // console.log(file)
+      // console.log(file.inIndex())
+      // console.log(file.inWorkingTree());
+      // console.log(file.headToIndex());
+      // console.log(file.indexToWorkdir());
       if (file.isNew()) status.type = 'NEW';
       if (file.isDeleted()) status.type = 'DELETED';
       if (file.isModified()) status.type = 'MODIFIED';
@@ -298,7 +298,7 @@ git.status = async function (username, project) {
       unstaged: {}
     });
   } catch (err) {
-    console.log(err)
+   // console.log(err)
     throw err.status ? err : {
       status: 500,
       message: 'Unable to get project status at this time'

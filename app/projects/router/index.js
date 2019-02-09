@@ -9,6 +9,25 @@ var validateStage = middleware.validateStage;
 
 var router = express.Router();
 
+if (process.env.NODE_ENV === 'production') {
+  // seed
+  let project = new Project({
+    creator: 'demoaccount',
+    project_name: 'Calculator'
+  });
+  project.save();
+  project = new Project({
+    creator: 'demoaccount',
+    project_name: 'SimonGame'
+  });
+  project.save();
+  project = new Project({
+    creator: 'demoaccount',
+    project_name: 'PersonalWebsite'
+  });
+  project.save();
+}
+
 // Create project
 router.post('/users/:username/projects/', function (req, res, next) {
   var newProject = new Project({

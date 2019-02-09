@@ -4,6 +4,16 @@ var passport = require('../passport');
 
 var router = express.Router();
 
+if (process.env.NODE_ENV === 'production') {
+// seed
+  let user = new User({
+    username: 'demoaccount',
+    password: 'demo_password'
+  });
+  user.save();
+
+}
+
 router.get('/logout', function(req, res, next) {
   if (!req.user) {
     return res.json({status: 401, message: 'Unauthenticated'});

@@ -3,7 +3,7 @@ var app = express();
 var fsp = require('fs-promise');
 var bodyParser = require('body-parser');
 var session = require('express-session');
-var MemcachedStore = require('connect-memcached')(session);
+var MemcachedStore = require('connect-memjs')(session);
 var mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
@@ -18,7 +18,7 @@ var config = require(process.env.NODE_ENV === 'production' ? './config.js' : './
 
 
 // connect to mongodb
-mongoose.connect(config.mongoURL, function (err) {
+mongoose.connect(config.mongoURL, {useNewUrlParser: true } ,function (err) {
     if (err) {
         console.error('Unable to connect to mongoDB: ', err);
     }
@@ -34,26 +34,25 @@ app.use(bodyParser.json());
 app.use(session({
     secret: 'keyboard cat',
     resave: true,
-    store: new MemcachedStore({
-        hosts: [config.memcachedURL],
-    }),
+    store: new MemcachedStore(config.memcached),
     saveUninitialized: true,
     cookie: {
         httpOnly: true,
         sameSite: true,
-        secure: process.env.NODE_ENV === 'production'
+        //secure: process.env.NODE_ENV === 'production'
     }
 }));
 app.use(passport.initialize());
 app.use(passport.session());
 
-const logRequestStart = (req, res, next) => {
-    console.log(req.user)
-    console.info(`${req.method} ${req.originalUrl}`)
-    next()
+if (process.env.NODE_ENV !== 'production') {
+    const logRequestStart = (req, res, next) => {
+        console.log(`User: ${req.user}`)
+        console.info(`${req.method} ${req.originalUrl}`)
+        next()
+    }
+    app.use(logRequestStart)
 }
-
-app.use(logRequestStart)
 
 app.use('/api/auth', authenticateRouter);
 app.use('/api/projects', middleware.authorizedRoute, middleware.privateRoute, projectsRouter);
@@ -107,30 +106,33 @@ if (process.env.NODE_ENV !== 'production') {
 module.exports = app;
 
 if (require.main === module) {
-    if (process.env.NODE_ENV !== 'production') {
-        app.listen(8080, function () {
-            console.log('Running development on port 8080');
-        });
-    } else {
-        var fs = require('fs');
-        var https = require('https');
-        var httpsConfig = {
-            ca: fs.readFileSync('webeditor_me/webeditor_me.ca-bundle'),
-            key: fs.readFileSync('webeditor_me/webeditor_me.key'),
-            cert: fs.readFileSync('webeditor_me/webeditor_me.crt')
-        };
-        https.createServer(httpsConfig, app).listen(8082, function () {
-            console.log('App running HTTPS on port 8082');
-        });
+    app.listen(config.port, function () {
+        console.log('Running on port 8080');
+    });
+    // if (process.env.NODE_ENV !== 'production') {
+    //     app.listen(8080, function () {
+    //         console.log('Running development on port 8080');
+    //     });
+    // } else {
+    //     // var fs = require('fs');
+    //     // var https = require('https');
+    //     // var httpsConfig = {
+    //     //     ca: fs.readFileSync('webeditor_me/webeditor_me.ca-bundle'),
+    //     //     key: fs.readFileSync('webeditor_me/webeditor_me.key'),
+    //     //     cert: fs.readFileSync('webeditor_me/webeditor_me.crt')
+    //     // };
+    //     // https.createServer(httpsConfig, app).listen(8082, function () {
+    //     //     console.log('App running HTTPS on port 8082');
+    //     // });
 
 
-        // Taken from http://stackoverflow.com/questions/7450940/automatic-https-connection-redirect-with-node-js-express
-        var http = require('http');
-        http.createServer(function (req, res) {
-            res.writeHead(301, {
-                "Location": config.host + req.url
-            });
-            res.end();
-        }).listen(8080);
-    }
+    //     // Taken from http://stackoverflow.com/questions/7450940/automatic-https-connection-redirect-with-node-js-express
+    //     var http = require('http');
+    //     http.createServer(function (req, res) {
+    //         res.writeHead(301, {
+    //             "Location": config.host + req.url
+    //         });
+    //         res.end();
+    //     }).listen(8080);
+    // }
 }
