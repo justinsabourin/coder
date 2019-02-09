@@ -1,5 +1,5 @@
 module.exports = {
-    repoPath: '/data/repositories',
+    repoPath: '/home/server/repositories',
     mongoURL: 'mongodb://mongo/webeditor',
     memcached: {
         hosts: ['memcached:11211'],

@@ -3,7 +3,7 @@ services:
   web:
     build: 
       context: ./app
-      dockerfile: Dockerfile.old
+      dockerfile: Dockerfile
     volumes:
       - repositories:/home/server/repositories
     links:
